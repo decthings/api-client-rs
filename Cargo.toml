@@ -1,6 +1,6 @@
 [package]
 name = "decthings-api"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 license-file = "LICENSE"
 description = "Official Rust API client for Decthings"
