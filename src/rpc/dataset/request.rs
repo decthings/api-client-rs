@@ -68,7 +68,7 @@ pub struct AddEntriesParams<'a> {
     pub dataset_id: &'a str,
     /// New data to add to the dataset. There should be one entry for each key in the dataset, and the length of the
     /// data to add to all keys must be the same.
-    pub keys: &'a [DataToAddForKey<'a>],
+    pub keys: Vec<DataToAddForKey<'a>>,
     /// If specified, the operation will only be performed if the current dataset versionId is equal to the specified
     /// string.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -82,7 +82,7 @@ pub struct AddEntriesToNeedsReviewParams<'a> {
     pub dataset_id: &'a str,
     /// New data to add to the dataset. There should be one entry for each key in the dataset, and the length of the
     /// data to add to all keys must be the same.
-    pub keys: &'a [DataToAddForKey<'a>],
+    pub keys: Vec<DataToAddForKey<'a>>,
     /// If specified, the operation will only be performed if the current dataset versionId is equal to the specified
     /// string.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -99,7 +99,7 @@ pub struct FinalizeNeedsReviewEntriesParams<'a> {
     /// New data to add to the dataset, in place of the entries removed from 'needs review'. There should be one entry
     /// for each key in the dataset, and the length of the data in each key must equal the length of *indexes*.
     #[serde(skip_serializing)]
-    pub keys: &'a [DataToAddForKey<'a>],
+    pub keys: Vec<DataToAddForKey<'a>>,
     /// If specified, the operation will only be performed if the current dataset versionId is equal to the specified
     /// string.
     #[serde(skip_serializing_if = "Option::is_none")]

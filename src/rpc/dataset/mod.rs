@@ -199,7 +199,7 @@ impl DatasetRpc {
         params: AddEntriesParams<'_>,
     ) -> Result<AddEntriesResult, crate::DecthingsRpcError<AddEntriesError>> {
         let (tx, rx) = tokio::sync::oneshot::channel();
-        let serialized = serialize_add_dataset_data(params.keys).map_err(|e| {
+        let serialized = serialize_add_dataset_data(&params.keys).map_err(|e| {
             crate::DecthingsRpcError::Rpc(AddEntriesError::InvalidParameter {
                 parameter_name: "params.keys".to_string(),
                 reason: e,
@@ -237,7 +237,7 @@ impl DatasetRpc {
     ) -> Result<AddEntriesToNeedsReviewResult, crate::DecthingsRpcError<AddEntriesToNeedsReviewError>>
     {
         let (tx, rx) = tokio::sync::oneshot::channel();
-        let serialized = serialize_add_dataset_data(params.keys).map_err(|e| {
+        let serialized = serialize_add_dataset_data(&params.keys).map_err(|e| {
             crate::DecthingsRpcError::Rpc(AddEntriesToNeedsReviewError::InvalidParameter {
                 parameter_name: "params.keys".to_string(),
                 reason: e,
@@ -279,7 +279,7 @@ impl DatasetRpc {
         crate::DecthingsRpcError<FinalizeNeedsReviewEntriesError>,
     > {
         let (tx, rx) = tokio::sync::oneshot::channel();
-        let serialized = serialize_add_dataset_data(params.keys).map_err(|e| {
+        let serialized = serialize_add_dataset_data(&params.keys).map_err(|e| {
             crate::DecthingsRpcError::Rpc(FinalizeNeedsReviewEntriesError::InvalidParameter {
                 parameter_name: "params.keys".to_string(),
                 reason: e,
