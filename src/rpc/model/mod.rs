@@ -43,6 +43,7 @@ impl ModelRpc {
                     .await;
             }
             CreateModelOptions::Upload {
+                tags: _,
                 parameter_definitions: _,
                 format: _,
                 data,

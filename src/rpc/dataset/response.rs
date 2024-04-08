@@ -85,6 +85,7 @@ pub struct Dataset {
     pub id: String,
     pub name: String,
     pub description: String,
+    pub tags: Vec<super::super::Tag>,
     /// If this dataset was created by a user, the owner will be the userId for that user. Otherwise, the dataset was
     /// be created by Decthings, in which case the owner will be "decthings".
     pub owner: String,

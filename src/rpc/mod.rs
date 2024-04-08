@@ -14,6 +14,20 @@ pub mod persistent_launcher;
 pub mod spawned;
 pub mod terminal;
 
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TagProvider<'a> {
+    pub tag: &'a str,
+    pub value: &'a str,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Tag {
+    pub tag: String,
+    pub value: String,
+}
+
 fn serialize_option_asref_str_seq<S: Serializer, T: AsRef<str>>(
     values: &Option<&[T]>,
     serializer: S,

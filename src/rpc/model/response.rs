@@ -335,6 +335,7 @@ pub struct Model {
     pub id: String,
     pub name: String,
     pub description: String,
+    pub tags: Vec<super::super::Tag>,
     pub owner: String,
     pub access: ModelAccess,
     pub language: Language,

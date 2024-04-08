@@ -68,6 +68,8 @@ impl<'a, D: AsRef<[u8]>> CreateModelInitialState<'a, D> {
 pub enum CreateModelOptions<'a, D: AsRef<[u8]>> {
     #[serde(rename_all = "camelCase")]
     Code {
+        /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
+        tags: Option<&'a [super::super::TagProvider<'a>]>,
         #[serde(skip_serializing_if = "Option::is_none")]
         parameter_definitions: Option<ParameterDefinitions>,
         language: super::response::Language,
@@ -79,6 +81,8 @@ pub enum CreateModelOptions<'a, D: AsRef<[u8]>> {
     },
     #[serde(rename_all = "camelCase")]
     Upload {
+        /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
+        tags: Option<&'a [super::super::TagProvider<'a>]>,
         #[serde(skip_serializing_if = "Option::is_none")]
         parameter_definitions: Option<ParameterDefinitions>,
         /// At the time of writing, formats "tflite" and "onnx" are available.
@@ -178,6 +182,8 @@ pub struct UpdateModelProperties<'a> {
     pub name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<&'a [super::super::TagProvider<'a>]>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parameter_definitions: Option<ParameterDefinitions>,
     #[serde(skip_serializing_if = "Option::is_none")]

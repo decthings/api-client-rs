@@ -8,6 +8,8 @@ pub struct CreateDatasetParams<'a> {
     pub name: &'a str,
     /// A description of the dataset.
     pub description: &'a str,
+    /// Tags are used to specify things like dataset type (image classification, etc.) and other metadata.
+    pub tags: Option<&'a [super::super::TagProvider<'a>]>,
     /// Each key contains separate data, allowing you to mix multiple types. For example, for an image dataset you
     /// could have an "image" of type image, and "label" of type string.
     pub rules: &'a [&'a DecthingsParameterDefinition],
@@ -20,6 +22,8 @@ pub struct UpdateDatasetProperties<'a> {
     pub name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<&'a [super::super::TagProvider<'a>]>,
 }
 
 #[derive(Debug, Clone, Serialize)]
