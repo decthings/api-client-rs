@@ -536,7 +536,7 @@ impl OwnedDecthingsTensor {
         }
     }
 
-    pub(crate) fn from_bytes(data: bytes::Bytes) -> Result<Self, DeserializeDecthingsTensorError> {
+    pub fn from_bytes(data: bytes::Bytes) -> Result<Self, DeserializeDecthingsTensorError> {
         let Some(&first_byte) = data.first() else {
             return Err(DeserializeDecthingsTensorError::UnexpectedEndOfBytes);
         };
