@@ -38,9 +38,3 @@ pub struct DecthingsTensorRules {
     pub shape: Vec<Option<u32>>,
     pub allowed_types: Vec<DecthingsElementType>,
 }
-
-pub(crate) fn deserialize_empty_owned_decthings_tensor<'de, D: serde::Deserializer<'de>>(
-    _: D,
-) -> Result<OwnedDecthingsTensor, D::Error> {
-    Ok(OwnedDecthingsTensor::empty())
-}

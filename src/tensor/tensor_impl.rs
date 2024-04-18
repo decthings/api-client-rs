@@ -526,16 +526,10 @@ impl<'a> DecthingsTensor<'a> {
 
 #[derive(Clone)]
 pub struct OwnedDecthingsTensor {
-    data: bytes::Bytes,
+    pub(crate) data: bytes::Bytes,
 }
 
 impl OwnedDecthingsTensor {
-    pub(crate) fn empty() -> Self {
-        Self {
-            data: vec![].into(),
-        }
-    }
-
     pub fn from_bytes(data: bytes::Bytes) -> Result<Self, DeserializeDecthingsTensorError> {
         let Some(&first_byte) = data.first() else {
             return Err(DeserializeDecthingsTensorError::UnexpectedEndOfBytes);
@@ -658,17 +652,6 @@ impl OwnedDecthingsTensor {
         Ok(Self {
             data: data.slice(0..pos),
         })
-    }
-
-    pub(crate) fn many_from_bytes(data: bytes::Bytes) -> Result<Vec<Self>, ()> {
-        let mut res = vec![];
-        let mut pos = 0;
-        while data.len() > pos {
-            let val = Self::from_bytes(data.slice(pos..)).map_err(|_| ())?;
-            pos += val.byte_size();
-            res.push(val);
-        }
-        Ok(res)
     }
 
     pub fn byte_size(&self) -> usize {
