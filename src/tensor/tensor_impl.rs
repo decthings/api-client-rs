@@ -667,6 +667,7 @@ impl OwnedDecthingsTensor {
                     }
                     let (len, varint_len) = crate::varint::deserialize_varint_u64(&data[pos..]);
                     let len: usize = len.try_into().unwrap();
+                    pos += varint_len as usize;
                     if matches!(first_byte, TYPE_SPEC_STRING) {
                         if let Err(e) = std::str::from_utf8(&data[pos..pos + len]) {
                             return Err(DeserializeDecthingsTensorError::InvalidBytes(format!(
@@ -710,7 +711,7 @@ impl OwnedDecthingsTensor {
                             )));
                         }
                     }
-                    pos += len + varint_len as usize;
+                    pos += len;
                 }
             }
         }
