@@ -221,6 +221,72 @@ impl<'a> DecthingsTensor<'a> {
         }
     }
 
+    /// If this is a string type with length 1, returns the string.
+    pub fn as_str_item(&self) -> Option<&str> {
+        if self.len() != 1 {
+            return None;
+        }
+        match self {
+            Self::String(val) => Some(val.first().unwrap()),
+            _ => None,
+        }
+    }
+
+    /// If this is a binary type with length 1, returns the binary.
+    pub fn as_binary_item(&self) -> Option<&[u8]> {
+        if self.len() != 1 {
+            return None;
+        }
+        match self {
+            Self::Binary(val) => Some(val.first().unwrap()),
+            _ => None,
+        }
+    }
+
+    /// If this is a boolean type with length 1, returns the boolean.
+    pub fn as_boolean_item(&self) -> Option<bool> {
+        if self.len() != 1 {
+            return None;
+        }
+        match self {
+            Self::Boolean(val) => Some(*val.first().unwrap()),
+            _ => None,
+        }
+    }
+
+    /// If this is an image type with length 1, returns the image.
+    pub fn as_image_item(&self) -> Option<&DecthingsElementImage> {
+        if self.len() != 1 {
+            return None;
+        }
+        match self {
+            Self::Image(val) => Some(val.first().unwrap()),
+            _ => None,
+        }
+    }
+
+    /// If this is a audio type with length 1, returns the audio.
+    pub fn as_audio_item(&self) -> Option<&DecthingsElementAudio> {
+        if self.len() != 1 {
+            return None;
+        }
+        match self {
+            Self::Audio(val) => Some(val.first().unwrap()),
+            _ => None,
+        }
+    }
+
+    /// If this is a video type with length 1, returns the video.
+    pub fn as_video_item(&self) -> Option<&DecthingsElementVideo> {
+        if self.len() != 1 {
+            return None;
+        }
+        match self {
+            Self::Video(val) => Some(val.first().unwrap()),
+            _ => None,
+        }
+    }
+
     pub(crate) fn serialized_len(&self) -> usize {
         let size_from_elements = match self {
             Self::F32(inner) => inner.len() * std::mem::size_of::<f32>(),
@@ -861,6 +927,10 @@ impl OwnedDecthingsTensor {
                 unreachable!()
             }
         }
+    }
+
+    pub fn serialize(&self) -> bytes::Bytes {
+        self.data.clone()
     }
 }
 
