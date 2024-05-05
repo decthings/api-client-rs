@@ -939,3 +939,9 @@ impl std::fmt::Debug for OwnedDecthingsTensor {
         write!(f, "OwnedDecthingsTensor({:?})", self.tensor())
     }
 }
+
+impl<'a> From<&'a OwnedDecthingsTensor> for DecthingsTensor<'a> {
+    fn from(value: &'a OwnedDecthingsTensor) -> Self {
+        value.tensor()
+    }
+}

@@ -1,3 +1,5 @@
+pub use ndarray;
+
 #[cfg(feature = "client")]
 pub mod client;
 
