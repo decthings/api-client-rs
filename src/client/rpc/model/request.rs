@@ -92,12 +92,16 @@ pub enum CreateModelOptions<'a, D: AsRef<[u8]>> {
     },
     #[serde(rename_all = "camelCase")]
     BasedOnModelSnapshot {
+        /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
+        tags: Option<&'a [super::super::TagProvider<'a>]>,
         model_id: &'a str,
         snapshot_id: &'a str,
         initial_state: CreateModelInitialState<'a, D>,
     },
     #[serde(rename_all = "camelCase")]
     FromExisting {
+        /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
+        tags: Option<&'a [super::super::TagProvider<'a>]>,
         model_id: &'a str,
         #[serde(skip_serializing_if = "Option::is_none")]
         snapshot_id: Option<&'a str>,

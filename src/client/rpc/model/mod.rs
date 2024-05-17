@@ -22,6 +22,7 @@ impl ModelRpc {
         let (tx, rx) = tokio::sync::oneshot::channel();
         match &params.options {
             CreateModelOptions::BasedOnModelSnapshot {
+                tags: _,
                 model_id: _,
                 snapshot_id: _,
                 initial_state: CreateModelInitialState::Copy,
@@ -63,6 +64,7 @@ impl ModelRpc {
                     .await;
             }
             CreateModelOptions::BasedOnModelSnapshot {
+                tags: _,
                 model_id: _,
                 snapshot_id: _,
                 initial_state: CreateModelInitialState::Upload { name: _, data },
@@ -82,6 +84,7 @@ impl ModelRpc {
                     .await;
             }
             CreateModelOptions::BasedOnModelSnapshot {
+                tags: _,
                 model_id: _,
                 snapshot_id: _,
                 initial_state:
