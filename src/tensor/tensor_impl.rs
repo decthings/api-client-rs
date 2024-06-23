@@ -941,8 +941,16 @@ impl std::fmt::Debug for OwnedDecthingsTensor {
     }
 }
 
-impl<'a> From<&'a OwnedDecthingsTensor> for DecthingsTensor<'a> {
-    fn from(value: &'a OwnedDecthingsTensor) -> Self {
-        value.tensor()
+impl<'a, T: AsRef<OwnedDecthingsTensor>> From<&'a T> for DecthingsTensor<'a> {
+    fn from(value: &'a T) -> Self {
+        value.as_ref().tensor()
+    }
+}
+
+impl<'a> From<DecthingsTensor<'a>> for OwnedDecthingsTensor {
+    fn from(value: DecthingsTensor<'a>) -> Self {
+        OwnedDecthingsTensor {
+            data: value.serialize().into(),
+        }
     }
 }
