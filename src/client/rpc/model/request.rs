@@ -1,6 +1,8 @@
-use crate::client::{
-    rpc::{ExecutionLocationProvider, LauncherConfig, LauncherSpec, ParameterDefinitions},
-    DecthingsParameterProvider,
+use crate::{
+    client::rpc::{
+        ExecutionLocationProvider, LauncherConfig, LauncherSpec, ParameterDefinitions, TagProvider,
+    },
+    client::DecthingsParameterProvider,
 };
 use serde::Serialize;
 
@@ -69,7 +71,8 @@ pub enum CreateModelOptions<'a, D: AsRef<[u8]>> {
     #[serde(rename_all = "camelCase")]
     Code {
         /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
-        tags: Option<&'a [super::super::TagProvider<'a>]>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        tags: Option<&'a [TagProvider<'a>]>,
         #[serde(skip_serializing_if = "Option::is_none")]
         parameter_definitions: Option<ParameterDefinitions>,
         language: super::response::Language,
@@ -82,18 +85,20 @@ pub enum CreateModelOptions<'a, D: AsRef<[u8]>> {
     #[serde(rename_all = "camelCase")]
     Upload {
         /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
-        tags: Option<&'a [super::super::TagProvider<'a>]>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        tags: Option<&'a [TagProvider<'a>]>,
         #[serde(skip_serializing_if = "Option::is_none")]
         parameter_definitions: Option<ParameterDefinitions>,
         /// At the time of writing, formats "tflite" and "onnx" are available.
         format: &'a str,
         #[serde(skip_serializing)]
-        data: &'a [u8],
+        data: D,
     },
     #[serde(rename_all = "camelCase")]
     BasedOnModelSnapshot {
         /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
-        tags: Option<&'a [super::super::TagProvider<'a>]>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        tags: Option<&'a [TagProvider<'a>]>,
         model_id: &'a str,
         snapshot_id: &'a str,
         initial_state: CreateModelInitialState<'a, D>,
@@ -101,7 +106,8 @@ pub enum CreateModelOptions<'a, D: AsRef<[u8]>> {
     #[serde(rename_all = "camelCase")]
     FromExisting {
         /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
-        tags: Option<&'a [super::super::TagProvider<'a>]>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        tags: Option<&'a [TagProvider<'a>]>,
         model_id: &'a str,
         #[serde(skip_serializing_if = "Option::is_none")]
         snapshot_id: Option<&'a str>,
@@ -187,7 +193,7 @@ pub struct UpdateModelProperties<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tags: Option<&'a [super::super::TagProvider<'a>]>,
+    pub tags: Option<&'a [TagProvider<'a>]>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parameter_definitions: Option<ParameterDefinitions>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -209,11 +215,44 @@ pub struct UpdateModelParams<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetModelsParams<'a, S: AsRef<str>> {
-    /// Which models to fetch. If unspecified, all models will be fetched.
-    #[serde(skip_serializing_if = "Option::is_none")]
+pub struct GetModelsFilter<'a, S: AsRef<str>> {
     #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
-    pub model_ids: Option<&'a [S]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owners: Option<&'a [S]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<&'a [TagProvider<'a>]>,
+    #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ids: Option<&'a [S]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub search_name: Option<&'a str>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SortDirection {
+    Asc,
+    Desc,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(bound = "")]
+pub struct GetModelsParams<'a, S: AsRef<str>> {
+    /// Number of items from the results to skip. Defaults to 0.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<u32>,
+    /// Max number of items to return. Defaults to 20.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<u32>,
+    /// If specified, determines which items to retrieve.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<GetModelsFilter<'a, S>>,
+    /// Specifies a field in the returned items to sort by. Defaults to "createdAt".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sort: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sort_direction: Option<SortDirection>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -286,11 +325,10 @@ pub struct UploadStateParams<'a, S: AsRef<str>, D: AsRef<[u8]>> {
     /// If provided, these states will be deleted when the new state has been uploaded, in a single atomic operation.
     /// If either the upload or the delete fails, both the upload and the delete operations are aborted and an error is
     /// returned.
-    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub delete_states: Option<&'a [S]>,
-    /// Allows your model to access to files and state of these additional models. Can be useful for merging models
-    /// together.
+    /// Allows your model to access to files of these additional models. Can be useful for merging models together.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mount_models: Option<&'a [MountModel<'a>]>,
 }
@@ -365,8 +403,8 @@ pub struct GetModelStateParams<'a, S: AsRef<str>> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub state_id: Option<&'a str>,
     /// Which keys to fetch. Defaults to all keys.
-    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub keys: Option<&'a [S]>,
 }
 
@@ -378,8 +416,8 @@ pub struct GetSnapshotStateParams<'a, S: AsRef<str>> {
     /// The snapshot's id.
     pub snapshot_id: &'a str,
     /// Which keys to fetch. Defaults to all keys.
-    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub keys: Option<&'a [S]>,
 }
 

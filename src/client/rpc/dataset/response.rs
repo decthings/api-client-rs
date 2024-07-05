@@ -1,4 +1,4 @@
-use crate::{client::DecthingsParameterDefinition, tensor::OwnedDecthingsTensor};
+use crate::{client::rpc::Tag, client::DecthingsParameterDefinition, tensor::OwnedDecthingsTensor};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -67,6 +67,13 @@ pub enum DeleteDatasetError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DatasetOwner {
+    pub user_id: String,
+    pub username: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum DatasetAccess {
     Read,
     Readwrite,
@@ -85,10 +92,9 @@ pub struct Dataset {
     pub id: String,
     pub name: String,
     pub description: String,
-    pub tags: Vec<super::super::Tag>,
-    /// If this dataset was created by a user, the owner will be the userId for that user. Otherwise, the dataset was
-    /// be created by Decthings, in which case the owner will be "decthings".
-    pub owner: String,
+    pub created_at: i64,
+    pub tags: Vec<Tag>,
+    pub owner: DatasetOwner,
     pub access: DatasetAccess,
     pub keys: Vec<DecthingsParameterDefinition>,
     pub entries: DatasetEntries,
@@ -103,6 +109,10 @@ pub struct Dataset {
 #[serde(rename_all = "camelCase")]
 pub struct GetDatasetsResult {
     pub datasets: Vec<Dataset>,
+    /// The total number of datasets that matched the filter.
+    pub total: u32,
+    pub offset: u32,
+    pub limit: u32,
 }
 
 #[derive(Debug, Clone, Deserialize)]

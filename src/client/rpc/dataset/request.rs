@@ -1,5 +1,7 @@
-use crate::{client::DecthingsParameterDefinition, tensor::DecthingsTensor};
-use serde::{Serialize, Serializer};
+use crate::{
+    client::rpc::TagProvider, client::DecthingsParameterDefinition, tensor::DecthingsTensor,
+};
+use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -9,10 +11,11 @@ pub struct CreateDatasetParams<'a> {
     /// A description of the dataset.
     pub description: &'a str,
     /// Tags are used to specify things like dataset type (image classification, etc.) and other metadata.
-    pub tags: Option<&'a [super::super::TagProvider<'a>]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<&'a [TagProvider<'a>]>,
     /// Each key contains separate data, allowing you to mix multiple types. For example, for an image dataset you
     /// could have an "image" of type image, and "label" of type string.
-    pub rules: &'a [&'a DecthingsParameterDefinition],
+    pub keys: &'a [&'a DecthingsParameterDefinition],
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -23,7 +26,7 @@ pub struct UpdateDatasetProperties<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tags: Option<&'a [super::super::TagProvider<'a>]>,
+    pub tags: Option<&'a [TagProvider<'a>]>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -44,10 +47,43 @@ pub struct DeleteDatasetParams<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetDatasetsParams<'a, S: AsRef<str>> {
-    /// Which datasets to fetch. If unspecified, all datasets will be fetched.
+pub struct GetDatasetsFilter<'a, S: AsRef<str>> {
+    #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dataset_ids: Option<&'a [S]>,
+    pub owners: Option<&'a [S]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<&'a [TagProvider<'a>]>,
+    #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ids: Option<&'a [S]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub search_name: Option<&'a str>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SortDirection {
+    Asc,
+    Desc,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetDatasetsParams<'a, S: AsRef<str>> {
+    /// Number of items from the results to skip. Defaults to 0.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<u32>,
+    /// Max number of items to return. Defaults to 20.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<u32>,
+    /// If specified, determines which items to retrieve.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<GetDatasetsFilter<'a, S>>,
+    /// Specifies a field in the returned items to sort by. Defaults to "createdAt".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sort: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sort_direction: Option<SortDirection>,
 }
 
 #[derive(Debug, Clone)]
@@ -59,7 +95,7 @@ pub struct DataToAddForKey<'a> {
 impl Serialize for DataToAddForKey<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer,
+        S: serde::Serializer,
     {
         serializer.serialize_str(self.key)
     }

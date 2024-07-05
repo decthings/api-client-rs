@@ -19,14 +19,15 @@ pub struct StartLanguageServerParams<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct WriteToLanguageServerParams<'a> {
+pub struct WriteToLanguageServerParams<'a, D: AsRef<[u8]>> {
     /// The language server's id.
     pub language_server_id: &'a str,
     /// Data to write.
     #[serde(skip_serializing)]
-    pub data: &'a [u8],
+    pub data: D,
 }
 
+#[cfg(feature = "events")]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LanguageUnsubscribeFromEventsParams<'a> {

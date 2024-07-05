@@ -1,12 +1,9 @@
-use serde::Deserialize;
-
 use crate::{
-    client::{
-        rpc::{ExecutionLocation, ParameterDefinitions},
-        DecthingsParameter,
-    },
+    client::rpc::{ExecutionLocation, ParameterDefinitions, StateKeyData},
+    client::DecthingsParameter,
     tensor::OwnedDecthingsTensor,
 };
+use serde::Deserialize;
 
 #[cfg(feature = "events")]
 #[derive(Debug, Clone, Deserialize)]
@@ -451,7 +448,7 @@ pub enum CallGetModelStateError {
 #[serde(rename_all = "camelCase")]
 pub struct DownloadStateDataResult {
     #[serde(rename = "stateKeyNames")]
-    pub data: Vec<super::super::StateKeyData>,
+    pub data: Vec<StateKeyData>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

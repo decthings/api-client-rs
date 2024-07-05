@@ -54,7 +54,7 @@ impl ModelRpc {
                         "Model",
                         "createModel",
                         &params,
-                        &[*data],
+                        &[data.as_ref()],
                         crate::client::RpcProtocol::Http,
                         |x| {
                             tx.send(x).ok();

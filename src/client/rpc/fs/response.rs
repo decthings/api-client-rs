@@ -1,11 +1,12 @@
-use base64::Engine;
-use serde::{de::Visitor, Deserialize, Deserializer};
+use serde::Deserialize;
 
-fn deserialize_base64<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+fn deserialize_base64<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<bytes::Bytes, D::Error> {
     struct Base64Visitor;
 
-    impl<'de> Visitor<'de> for Base64Visitor {
-        type Value = Vec<u8>;
+    impl<'de> serde::de::Visitor<'de> for Base64Visitor {
+        type Value = bytes::Bytes;
 
         fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
             formatter.write_str("a string containing json data")
@@ -15,8 +16,10 @@ fn deserialize_base64<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<
         where
             E: serde::de::Error,
         {
+            use base64::Engine;
             base64::engine::general_purpose::STANDARD
                 .decode(v)
+                .map(Into::into)
                 .map_err(E::custom)
         }
     }
@@ -55,9 +58,9 @@ pub enum LookupError {
     SnapshotNotFound,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOENT")]
     ENOENT,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
     BadCredentials,
     TooManyRequests,
@@ -107,9 +110,9 @@ pub enum SetattrError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EFBIG")]
     EFBIG,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EISDIR")]
     EISDIR,
     BadCredentials,
     TooManyRequests,
@@ -136,11 +139,11 @@ pub enum MknodError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EEXIST")]
     EEXIST,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOSPC")]
     ENOSPC,
     BadCredentials,
     TooManyRequests,
@@ -167,9 +170,9 @@ pub enum ReadError {
     SnapshotNotFound,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EISDIR")]
     EISDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EINVAL")]
     EINVAL,
     BadCredentials,
     TooManyRequests,
@@ -195,11 +198,11 @@ pub enum WriteError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EISDIR")]
     EISDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOSPC")]
     ENOSPC,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EINVAL")]
     EINVAL,
     BadCredentials,
     TooManyRequests,
@@ -226,11 +229,11 @@ pub enum SymlinkError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EEXIST")]
     EEXIST,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOSPC")]
     ENOSPC,
     BadCredentials,
     TooManyRequests,
@@ -257,7 +260,7 @@ pub enum ReadlinkError {
     SnapshotNotFound,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EINVAL")]
     EINVAL,
     BadCredentials,
     TooManyRequests,
@@ -284,11 +287,11 @@ pub enum MkdirError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EEXIST")]
     EEXIST,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOSPC")]
     ENOSPC,
     BadCredentials,
     TooManyRequests,
@@ -312,11 +315,11 @@ pub enum UnlinkError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOENT")]
     ENOENT,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EISDIR")]
     EISDIR,
     BadCredentials,
     TooManyRequests,
@@ -340,11 +343,11 @@ pub enum RmdirError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOENT")]
     ENOENT,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTEMPTY")]
     ENOTEMPTY,
     BadCredentials,
     TooManyRequests,
@@ -368,17 +371,17 @@ pub enum RenameError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOENT")]
     ENOENT,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTEMPTY")]
     ENOTEMPTY,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EEXIST")]
     EEXIST,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EISDIR")]
     EISDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOSPC")]
     ENOSPC,
     BadCredentials,
     TooManyRequests,
@@ -404,13 +407,13 @@ pub enum LinkError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EPERM")]
     EPERM,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EEXIST")]
     EEXIST,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOSPC")]
     ENOSPC,
     BadCredentials,
     TooManyRequests,
@@ -428,7 +431,7 @@ pub enum LinkError {
 pub struct ReaddirEntry {
     /// Filename
     #[serde(deserialize_with = "deserialize_base64")]
-    pub basename: Vec<u8>,
+    pub basename: bytes::Bytes,
     /// File mode
     pub filetype: u32,
     /// Inode number
@@ -448,7 +451,7 @@ pub enum ReaddirError {
     SnapshotNotFound,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
     BadCredentials,
     TooManyRequests,
@@ -472,9 +475,9 @@ pub enum RmdirAllError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOENT")]
     ENOENT,
     BadCredentials,
     TooManyRequests,
@@ -498,11 +501,11 @@ pub enum CopyError {
     AccessDenied,
     #[serde(rename = "ESTALE")]
     ESTALE,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOTDIR")]
     ENOTDIR,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "EEXIST")]
     EEXIST,
-    #[serde(rename = "ESTALE")]
+    #[serde(rename = "ENOSPC")]
     ENOSPC,
     BadCredentials,
     TooManyRequests,

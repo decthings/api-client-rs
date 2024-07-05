@@ -1,6 +1,5 @@
-use serde::Deserialize;
-
 use crate::client::rpc::LauncherSpec;
+use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -58,8 +57,7 @@ pub enum PersistentLauncherRunningType {
 #[serde(rename_all = "camelCase")]
 pub struct PersistentLauncherRunning {
     pub id: String,
-    #[serde(rename = "type")]
-    pub running_type: PersistentLauncherRunningType,
+    pub r#type: PersistentLauncherRunningType,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -67,9 +65,9 @@ pub struct PersistentLauncherRunning {
 pub struct PersistentLauncher {
     pub id: String,
     pub name: String,
+    pub created_at: Option<i64>,
     pub spec: LauncherSpec,
     pub state: PersistentLauncherState,
-    pub created_at: Option<i64>,
     pub running: Vec<PersistentLauncherRunning>,
 }
 
@@ -77,6 +75,10 @@ pub struct PersistentLauncher {
 #[serde(rename_all = "camelCase")]
 pub struct GetPersistentLaunchersResult {
     pub persistent_launchers: Vec<PersistentLauncher>,
+    /// The total number of datasets that matched the filter.
+    pub total: u32,
+    pub offset: u32,
+    pub limit: u32,
 }
 
 #[derive(Debug, Clone, Deserialize)]

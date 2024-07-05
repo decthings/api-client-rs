@@ -176,7 +176,7 @@ impl FsRpc {
 
     pub async fn write(
         &self,
-        params: WriteParams<'_>,
+        params: WriteParams<'_, impl AsRef<[u8]>>,
     ) -> Result<WriteResult, crate::client::DecthingsRpcError<WriteError>> {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.rpc
@@ -184,7 +184,7 @@ impl FsRpc {
                 "FS",
                 "write",
                 &params,
-                &[params.data],
+                &[params.data.as_ref()],
                 crate::client::RpcProtocol::Http,
                 |x| {
                     tx.send(x).ok();

@@ -1,12 +1,11 @@
-use serde::{Deserialize, Serialize};
-
 use crate::{
-    client::{
-        rpc::{ExecutionLocation, LauncherConfig, LauncherSpec, ParameterDefinitions},
-        DecthingsParameter,
+    client::rpc::{
+        ExecutionLocation, LauncherConfig, LauncherSpec, ParameterDefinitions, StateKeyData, Tag,
     },
+    client::DecthingsParameter,
     tensor::OwnedDecthingsTensor,
 };
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -242,6 +241,13 @@ pub enum UpdateModelError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ModelOwner {
+    pub user_id: String,
+    pub username: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum ModelAccess {
     Read,
     Readwrite,
@@ -337,9 +343,11 @@ pub struct Model {
     pub id: String,
     pub name: String,
     pub description: String,
-    pub tags: Vec<super::super::Tag>,
-    pub owner: String,
+    pub created_at: i64,
+    pub tags: Vec<Tag>,
+    pub owner: ModelOwner,
     pub access: ModelAccess,
+    pub being_created: bool,
     pub language: Language,
     pub wasm: bool,
     pub parameter_definitions: ParameterDefinitions,
@@ -359,7 +367,10 @@ pub struct Model {
 #[serde(rename_all = "camelCase")]
 pub struct GetModelsResult {
     pub models: Vec<Model>,
-    pub being_created: Vec<Model>,
+    /// The total number of datasets that matched the filter.
+    pub total: u32,
+    pub offset: u32,
+    pub limit: u32,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -696,7 +707,7 @@ pub enum DeleteModelStateError {
 #[serde(rename_all = "camelCase")]
 pub struct GetModelStateResult {
     #[serde(rename = "stateKeyNames")]
-    pub data: Vec<super::super::StateKeyData>,
+    pub data: Vec<StateKeyData>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -720,7 +731,7 @@ pub enum GetModelStateError {
 #[serde(rename_all = "camelCase")]
 pub struct GetSnapshotStateResult {
     #[serde(rename = "stateKeyNames")]
-    pub data: Vec<super::super::StateKeyData>,
+    pub data: Vec<StateKeyData>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

@@ -1,6 +1,5 @@
+use crate::client::rpc::{ExecutionLocationProvider, LauncherConfig};
 use serde::Serialize;
-
-use crate::client::rpc::{ExecutionLocation, LauncherConfig};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -21,7 +20,7 @@ pub struct SpawnedCommandOptions<'a> {
 #[serde(rename_all = "camelCase")]
 pub struct SpawnCommandParams<'a, S: AsRef<str>> {
     /// Which launcher to use for running the command.
-    pub execution_location: ExecutionLocation,
+    pub execution_location: ExecutionLocationProvider<'a>,
     /// Name of the command to run, without any arguments.
     pub command: &'a str,
     /// Arguments to pass to the command
@@ -49,7 +48,7 @@ pub struct SpawnCommandForModelParams<'a, S: AsRef<str>> {
     /// The model's id.
     pub model_id: &'a str,
     /// Which launcher to use for running the command.
-    pub execution_location: ExecutionLocation,
+    pub execution_location: ExecutionLocationProvider<'a>,
     /// Name of the command to run, without any arguments.
     pub command: &'a str,
     /// Arguments to pass to the command

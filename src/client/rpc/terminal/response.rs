@@ -1,7 +1,7 @@
+use crate::client::rpc::ExecutionLocation;
 use serde::Deserialize;
 
-use crate::client::rpc::ExecutionLocation;
-
+#[cfg(feature = "events")]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum TerminalSessionTerminatedReason {

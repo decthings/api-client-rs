@@ -69,7 +69,7 @@ impl LanguageRpc {
 
     pub async fn write_to_language_server(
         &self,
-        params: WriteToLanguageServerParams<'_>,
+        params: WriteToLanguageServerParams<'_, impl AsRef<[u8]>>,
     ) -> Result<
         WriteToLanguageServerResult,
         crate::client::DecthingsRpcError<WriteToLanguageServerError>,
@@ -81,7 +81,7 @@ impl LanguageRpc {
                 "Language",
                 "writeToLanguageServer",
                 &params,
-                [params.data],
+                [params.data.as_ref()],
                 crate::client::RpcProtocol::WsIfAvailableOtherwiseNone,
                 |x| {
                     tx.send(x).ok();

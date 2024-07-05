@@ -1,5 +1,6 @@
 use serde::Deserialize;
 
+#[cfg(feature = "events")]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LanguageServerTerminatedReason {
@@ -8,6 +9,7 @@ pub enum LanguageServerTerminatedReason {
     Unknown,
 }
 
+#[cfg(feature = "events")]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "params")]
 pub enum LanguageEvent {
@@ -66,10 +68,12 @@ pub enum WriteToLanguageServerError {
     },
 }
 
+#[cfg(feature = "events")]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LanguageUnsubscribeFromEventsResult {}
 
+#[cfg(feature = "events")]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum LanguageUnsubscribeFromEventsError {

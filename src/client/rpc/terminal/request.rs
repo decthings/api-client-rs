@@ -1,6 +1,5 @@
+use crate::client::rpc::ExecutionLocationProvider;
 use serde::Serialize;
-
-use crate::client::rpc::ExecutionLocation;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,7 +30,7 @@ pub struct LaunchTerminalSessionParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
     /// Which launcher to use for running the command.
-    pub execution_location: ExecutionLocation,
+    pub execution_location: ExecutionLocationProvider<'a>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub options: Option<TerminalOptions<'a>>,
     /// If true, immediately subscribes you to events "data" and "exit" for the terminal. Default: true.

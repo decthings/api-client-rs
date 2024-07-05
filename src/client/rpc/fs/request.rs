@@ -1,7 +1,7 @@
-use base64::Engine;
-use serde::{Serialize, Serializer};
+use serde::Serialize;
 
-fn serialize_base64<T: AsRef<[u8]>, S: Serializer>(t: &T, s: S) -> Result<S::Ok, S::Error> {
+fn serialize_base64<T: AsRef<[u8]>, S: serde::Serializer>(t: &T, s: S) -> Result<S::Ok, S::Error> {
+    use base64::Engine;
     s.serialize_str(&base64::engine::general_purpose::STANDARD.encode(t.as_ref()))
 }
 
@@ -94,13 +94,13 @@ pub struct ReadParams<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct WriteParams<'a> {
+pub struct WriteParams<'a, D: AsRef<[u8]>> {
     /// The model's id.
     pub model_id: &'a str,
     /// Inode number of file.
     pub inode: u64,
     #[serde(skip_serializing)]
-    pub data: &'a [u8],
+    pub data: D,
     /// Where in the file to start writing.
     pub offset: u64,
     /// If true, the file will be truncate to zero length before writing.
