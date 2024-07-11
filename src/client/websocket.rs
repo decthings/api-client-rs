@@ -136,7 +136,7 @@ impl DecthingsClientWebsocket {
                         tokio_tungstenite::tungstenite::Message::Text(text) => text.into_bytes(),
                         _ => continue,
                     };
-                    let (rpc_response_or_event, first_segment, additional_segments) =
+                    let (rpc_response_or_event, first_blob, blobs) =
                         super::protocol::deserialize_for_websocket(bytes::Bytes::from(binary))
                             .map_err(|_| WebSocketClientError::InvalidMessage)?;
                     match rpc_response_or_event {
@@ -147,8 +147,7 @@ impl DecthingsClientWebsocket {
                             drop(locked_waiting_for_response);
 
                             if let Some(waiting) = maybe_waiting {
-                                let state_modification =
-                                    (waiting)(Ok((first_segment, additional_segments)));
+                                let state_modification = (waiting)(Ok((first_blob, blobs)));
 
                                 let mut state_locked = state2.lock().await;
                                 for remove_event in state_modification.remove_events {
@@ -171,8 +170,8 @@ impl DecthingsClientWebsocket {
                                 let (parsed, state_modification) =
                                     super::event::DecthingsEvent::deserialize(
                                         &api,
-                                        &first_segment,
-                                        additional_segments,
+                                        &first_blob,
+                                        blobs,
                                     )
                                     .map_err(|_| WebSocketClientError::InvalidMessage)?;
 

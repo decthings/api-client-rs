@@ -22,11 +22,11 @@ impl<'a, P: serde::Serialize + 'a> RequestMessage<'a, P> {
 }
 
 // Message protocol:
-// 1. u8 specifying number of additional data segments
+// 1. u8 specifying number of blobs
 // 2. Varint specifying length of JSON data
-// 3. One varint for each data segment, specifying the length of data segment
+// 3. One varint for each blob, specifying the length
 // 4. JSON data
-// 5. Data segments
+// 5. Blobs
 pub(crate) fn serialize_for_http<P: serde::Serialize>(
     params: P,
     data: &[impl AsRef<[u8]>],
@@ -46,15 +46,15 @@ pub(crate) fn serialize_for_http<P: serde::Serialize>(
     ret.push(
         data.len()
             .try_into()
-            .expect("Cannot send more than u8::MAX data segments in one request."),
+            .expect("Cannot send more than u8::MAX blobs in one request."),
     );
     crate::varint::append_varint_u64(msg_buf.len() as u64, &mut ret);
-    for segment in data {
-        crate::varint::append_varint_u64(segment.as_ref().len() as u64, &mut ret);
+    for blob in data {
+        crate::varint::append_varint_u64(blob.as_ref().len() as u64, &mut ret);
     }
     ret.extend_from_slice(&msg_buf);
-    for segment in data {
-        ret.extend_from_slice(segment.as_ref());
+    for blob in data {
+        ret.extend_from_slice(blob.as_ref());
     }
 
     ret
@@ -63,11 +63,11 @@ pub(crate) fn serialize_for_http<P: serde::Serialize>(
 #[cfg(feature = "events")]
 // Message protocol:
 // 1. u32 id
-// 2. u8 specifying number of additional data segments
+// 2. u8 specifying number of blobs
 // 3. Varint specifying length of JSON data
-// 4. One varint for each data segment, specifying the length of data segment
+// 4. One varint for each blob, specifying the length
 // 5. JSON data
-// 6. Data segments
+// 6. Blobs
 pub(crate) fn serialize_for_websocket<P: serde::Serialize>(
     id: u32,
     message: RequestMessage<'_, P>,
@@ -89,15 +89,15 @@ pub(crate) fn serialize_for_websocket<P: serde::Serialize>(
     ret.push(
         data.len()
             .try_into()
-            .expect("Cannot send more than u8::MAX data segments in one request."),
+            .expect("Cannot send more than u8::MAX blobs in one request."),
     );
     crate::varint::append_varint_u64(msg_buf.len() as u64, &mut ret);
-    for segment in data {
-        crate::varint::append_varint_u64(segment.as_ref().len() as u64, &mut ret);
+    for blob in data {
+        crate::varint::append_varint_u64(blob.as_ref().len() as u64, &mut ret);
     }
     ret.extend_from_slice(&msg_buf);
-    for segment in data {
-        ret.extend_from_slice(segment.as_ref());
+    for blob in data {
+        ret.extend_from_slice(blob.as_ref());
     }
 
     ret
@@ -107,8 +107,8 @@ pub(crate) fn serialize_for_websocket<P: serde::Serialize>(
 // 1. Varint specifying length of JSON data
 // 2. JSON data
 // Repeated:
-// 3. Varint encoding length of next data segment
-// 4. next data segment
+// 3. Varint encoding length of next blob
+// 4. Next blob
 pub(crate) fn deserialize_for_http(
     data: bytes::Bytes,
 ) -> Result<(bytes::Bytes, Vec<bytes::Bytes>), ()> {
@@ -126,28 +126,27 @@ pub(crate) fn deserialize_for_http(
         return Err(());
     }
 
-    let first_segment = data.slice(v_length..v_length + length);
+    let first_blob = data.slice(v_length..v_length + length);
 
-    let mut additional_segments = Vec::new();
+    let mut blobs = Vec::new();
     let mut pos = v_length + length;
     while pos < data.len() {
-        let segment_v_length = crate::varint::get_serialized_varint_u64_len(&data[pos..]) as usize;
-        if data.len() < pos + segment_v_length {
+        let blob_v_length = crate::varint::get_serialized_varint_u64_len(&data[pos..]) as usize;
+        if data.len() < pos + blob_v_length {
             return Err(());
         }
-        let (segment_length, _) = crate::varint::deserialize_varint_u64(&data[pos..]);
-        let segment_length = segment_length as usize;
+        let (blob_length, _) = crate::varint::deserialize_varint_u64(&data[pos..]);
+        let blob_length = blob_length as usize;
 
-        if data.len() < pos + segment_v_length + segment_length {
+        if data.len() < pos + blob_v_length + blob_length {
             return Err(());
         }
 
-        additional_segments
-            .push(data.slice(pos + segment_v_length..pos + segment_v_length + segment_length));
-        pos += segment_length + segment_v_length;
+        blobs.push(data.slice(pos + blob_v_length..pos + blob_v_length + blob_length));
+        pos += blob_length + blob_v_length;
     }
 
-    Ok((first_segment, additional_segments))
+    Ok((first_blob, blobs))
 }
 
 #[cfg(feature = "events")]
@@ -165,8 +164,8 @@ pub enum RpcResponseOrEvent {
 // 5. Varint specifying length of JSON data
 // 6. JSON data
 // Repeated:
-// 7. Varint encoding length of next data segment
-// 8. next data segment
+// 7. Varint encoding length of next blob
+// 8. Next blob
 pub(crate) fn deserialize_for_websocket(
     data: bytes::Bytes,
 ) -> Result<(RpcResponseOrEvent, bytes::Bytes, Vec<bytes::Bytes>), ()> {
@@ -218,27 +217,27 @@ pub(crate) fn deserialize_for_websocket(
         return Err(());
     }
 
-    let first_segment = data.slice(pos..pos + length);
+    let first_blob = data.slice(pos..pos + length);
     pos += length;
 
-    let mut additional_segments = Vec::new();
+    let mut blobs = Vec::new();
     while pos < data.len() {
-        let segment_v_length = crate::varint::get_serialized_varint_u64_len(&data[pos..]) as usize;
-        if data.len() < pos + segment_v_length {
+        let blob_v_length = crate::varint::get_serialized_varint_u64_len(&data[pos..]) as usize;
+        if data.len() < pos + blob_v_length {
             return Err(());
         }
-        let (segment_length, _) = crate::varint::deserialize_varint_u64(&data[pos..]);
-        let segment_length = segment_length as usize;
+        let (blob_length, _) = crate::varint::deserialize_varint_u64(&data[pos..]);
+        let blob_length = blob_length as usize;
 
-        pos += segment_v_length;
+        pos += blob_v_length;
 
-        if data.len() < pos + segment_length {
+        if data.len() < pos + blob_length {
             return Err(());
         }
 
-        additional_segments.push(data.slice(pos..pos + segment_length));
-        pos += segment_length;
+        blobs.push(data.slice(pos..pos + blob_length));
+        pos += blob_length;
     }
 
-    Ok((rpc_response_or_event, first_segment, additional_segments))
+    Ok((rpc_response_or_event, first_blob, blobs))
 }

@@ -28,7 +28,7 @@ impl DecthingsEvent {
     pub(super) fn deserialize(
         api: &[u8],
         data: &[u8],
-        mut additional_segments: Vec<bytes::Bytes>,
+        mut blobs: Vec<bytes::Bytes>,
     ) -> Result<(DecthingsEvent, StateModification), ()> {
         match api {
             b"Debug" => {
@@ -45,20 +45,20 @@ impl DecthingsEvent {
                         debug_session_id: _,
                         data,
                     } => {
-                        if additional_segments.is_empty() {
+                        if blobs.is_empty() {
                             return Err(());
                         }
-                        *data = additional_segments.remove(0);
+                        *data = blobs.remove(0);
                         StateModification::empty()
                     }
                     DebugEvent::Stderr {
                         debug_session_id: _,
                         data,
                     } => {
-                        if additional_segments.is_empty() {
+                        if blobs.is_empty() {
                             return Err(());
                         }
-                        *data = additional_segments.remove(0);
+                        *data = blobs.remove(0);
                         StateModification::empty()
                     }
                     DebugEvent::Initialized {
@@ -68,10 +68,10 @@ impl DecthingsEvent {
                         debug_session_id: _,
                         data,
                     } => {
-                        if additional_segments.is_empty() {
+                        if blobs.is_empty() {
                             return Err(());
                         }
-                        *data = additional_segments.remove(0);
+                        *data = blobs.remove(0);
                         StateModification::empty()
                     }
                 };
@@ -92,10 +92,10 @@ impl DecthingsEvent {
                         language_server_id: _,
                         data,
                     } => {
-                        if additional_segments.is_empty() {
+                        if blobs.is_empty() {
                             return Err(());
                         }
-                        *data = additional_segments.remove(0);
+                        *data = blobs.remove(0);
                         StateModification::empty()
                     }
                 };
@@ -116,20 +116,20 @@ impl DecthingsEvent {
                         spawned_command_id: _,
                         data,
                     } => {
-                        if additional_segments.is_empty() {
+                        if blobs.is_empty() {
                             return Err(());
                         }
-                        *data = additional_segments.remove(0);
+                        *data = blobs.remove(0);
                         StateModification::empty()
                     }
                     SpawnedEvent::Stderr {
                         spawned_command_id: _,
                         data,
                     } => {
-                        if additional_segments.is_empty() {
+                        if blobs.is_empty() {
                             return Err(());
                         }
-                        *data = additional_segments.remove(0);
+                        *data = blobs.remove(0);
                         StateModification::empty()
                     }
                 };
@@ -150,10 +150,10 @@ impl DecthingsEvent {
                         terminal_session_id: _,
                         data,
                     } => {
-                        if additional_segments.is_empty() {
+                        if blobs.is_empty() {
                             return Err(());
                         }
-                        *data = additional_segments.remove(0);
+                        *data = blobs.remove(0);
                         StateModification::empty()
                     }
                 };
