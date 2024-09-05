@@ -1,7 +1,5 @@
 use crate::{
-    client::rpc::{
-        ExecutionLocationProvider, LauncherConfig, LauncherSpec, ParameterDefinitions, TagProvider,
-    },
+    client::rpc::{ExecutionLocationProvider, LauncherSpec, ParameterDefinitions, TagProvider},
     client::DecthingsParameterProvider,
 };
 use serde::Serialize;
@@ -200,8 +198,6 @@ pub struct UpdateModelProperties<'a> {
     pub default_launcher_specs: Option<OptionalDefaultLauncherSpecs<'a>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_durations_seconds: Option<super::response::MaxDurationsSeconds>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub launcher_config: Option<&'a LauncherConfig>,
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -1,9 +1,9 @@
-use crate::client::rpc::{ExecutionLocationProvider, LauncherConfig};
+use crate::client::rpc::ExecutionLocationProvider;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SpawnedCommandOptions<'a> {
+pub struct SpawnedCommandOptions {
     /// Will automatically terminate the command after this amount of time. Default: 3600.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout_seconds: Option<u32>,
@@ -11,9 +11,6 @@ pub struct SpawnedCommandOptions<'a> {
     /// Default: 600.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout_after_inactive_seconds: Option<u32>,
-    /// LauncherConfig to use.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub launcher_config: Option<&'a LauncherConfig>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -27,7 +24,7 @@ pub struct SpawnCommandParams<'a, S: AsRef<str>> {
     #[serde(serialize_with = "super::super::serialize_asref_str_seq")]
     pub args: &'a [S],
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub options: Option<SpawnedCommandOptions<'a>>,
+    pub options: Option<SpawnedCommandOptions>,
     /// If true, immediately subscribes you to events "stdout", "stderr" and "exit" for the spawned command. Default:
     /// true.
     #[cfg(feature = "events")]

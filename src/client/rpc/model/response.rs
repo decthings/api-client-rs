@@ -1,7 +1,5 @@
 use crate::{
-    client::rpc::{
-        ExecutionLocation, LauncherConfig, LauncherSpec, ParameterDefinitions, StateKeyData, Tag,
-    },
+    client::rpc::{ExecutionLocation, LauncherSpec, ParameterDefinitions, StateKeyData, Tag},
     client::DecthingsParameter,
     tensor::OwnedDecthingsTensor,
 };
@@ -322,7 +320,6 @@ pub struct ModelSnapshot {
     pub name: String,
     pub created_at: i64,
     pub filesystem_size_mebibytes: u32,
-    pub launcher_config: LauncherConfig,
     pub parameter_definitions: ParameterDefinitions,
     pub default_launcher_specs: DefaultLauncherSpecs,
     pub max_durations_seconds: MaxDurationsSeconds,
@@ -354,7 +351,6 @@ pub struct Model {
     pub default_launcher_specs: DefaultLauncherSpecs,
     pub max_durations_seconds: MaxDurationsSeconds,
     pub filesystem_size_mebibytes: u32,
-    pub launcher_config: LauncherConfig,
     pub ongoing_training_sessions: Vec<String>,
     pub training_sessions: Vec<String>,
     pub states: Vec<ModelState>,

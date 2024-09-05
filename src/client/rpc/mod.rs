@@ -71,31 +71,6 @@ pub struct LauncherSpec {
     pub swap_mebibytes: Option<u32>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
-pub struct LauncherConfigPythonPackages {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pytorch_version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tensorflow_version: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
-pub struct LauncherConfigPackages {
-    pub python: LauncherConfigPythonPackages,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
-pub struct LauncherConfig {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub node_version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub python_version: Option<String>,
-    pub packages: LauncherConfigPackages,
-}
-
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum ExecutionLocationProvider<'a> {
