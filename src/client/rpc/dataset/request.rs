@@ -69,6 +69,7 @@ pub enum SortDirection {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(bound(serialize = ""))]
 pub struct GetDatasetsParams<'a, S: AsRef<str>> {
     /// Number of items from the results to skip. Defaults to 0.
     #[serde(skip_serializing_if = "Option::is_none")]

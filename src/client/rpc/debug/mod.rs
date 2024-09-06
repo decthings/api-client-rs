@@ -1,11 +1,10 @@
 mod request;
 mod response;
 
+use crate::{client::StateModification, tensor::OwnedDecthingsTensor};
+
 pub use request::*;
 pub use response::*;
-use serde::Serialize;
-
-use crate::{client::StateModification, tensor::OwnedDecthingsTensor};
 
 pub struct DebugRpc {
     rpc: crate::client::DecthingsClientRpc,
@@ -89,7 +88,7 @@ impl DebugRpc {
 
     pub async fn get_debug_sessions(
         &self,
-        params: GetDebugSessionsParams<'_, impl AsRef<str> + Serialize>,
+        params: GetDebugSessionsParams<'_, impl AsRef<str>>,
     ) -> Result<GetDebugSessionsResult, crate::client::DecthingsRpcError<GetDebugSessionsError>>
     {
         let (tx, rx) = tokio::sync::oneshot::channel();

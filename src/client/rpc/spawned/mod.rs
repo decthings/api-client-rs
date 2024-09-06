@@ -1,11 +1,10 @@
 mod request;
 mod response;
 
+use crate::client::StateModification;
+
 pub use request::*;
 pub use response::*;
-use serde::Serialize;
-
-use crate::client::StateModification;
 
 pub struct SpawnedRpc {
     rpc: crate::client::DecthingsClientRpc,
@@ -216,7 +215,7 @@ impl SpawnedRpc {
 
     pub async fn get_spawned_commands(
         &self,
-        params: GetSpawnedCommandsParams<'_, impl AsRef<str> + Serialize>,
+        params: GetSpawnedCommandsParams<'_, impl AsRef<str>>,
     ) -> Result<GetSpawnedCommandsResult, crate::client::DecthingsRpcError<GetSpawnedCommandsError>>
     {
         let (tx, rx) = tokio::sync::oneshot::channel();

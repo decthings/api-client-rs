@@ -4,9 +4,9 @@ mod response;
 use std::collections::HashSet;
 
 use crate::{client::StateModification, tensor::OwnedDecthingsTensor};
+
 pub use request::*;
 pub use response::*;
-use serde::Serialize;
 
 /// *data* has one element per dataset key, where each of these elements contains a list of
 /// DecthingsTensor. We first assert that the keys are valid (more than one and unique), and that
@@ -165,7 +165,7 @@ impl DatasetRpc {
 
     pub async fn get_datasets(
         &self,
-        params: GetDatasetsParams<'_, impl AsRef<str> + Serialize>,
+        params: GetDatasetsParams<'_, impl AsRef<str>>,
     ) -> Result<GetDatasetsResult, crate::client::DecthingsRpcError<GetDatasetsError>> {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.rpc

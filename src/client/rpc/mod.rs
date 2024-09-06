@@ -5,6 +5,7 @@ use crate::client::DecthingsParameterDefinition;
 pub mod dataset;
 pub mod debug;
 pub mod fs;
+pub mod image;
 
 #[cfg(feature = "events")]
 pub mod language;

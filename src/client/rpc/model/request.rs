@@ -269,6 +269,19 @@ pub struct GetFilesystemUsageParams<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SetImageParams<'a> {
+    /// The model's id.
+    pub model_id: &'a str,
+    /// The domain name to load from, i.e "docker.io" or "registry.decthings.com"
+    pub domain: &'a str,
+    /// The repository to use, i.e "library/ubuntu"
+    pub repository: &'a str,
+    /// The tag to use, to, i.e "latest"
+    pub reference: &'a str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateStateMountModel<'a> {
     /// Id of the other model to mount.
     pub model_id: &'a str,

@@ -438,6 +438,27 @@ pub enum GetFilesystemUsageError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SetImageResult {}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "code")]
+pub enum SetImageError {
+    ModelNotFound,
+    AccessDenied,
+    ImageNotFound,
+    BadCredentials,
+    TooManyRequests,
+    PaymentRequired,
+    Unknown,
+    #[serde(rename_all = "camelCase")]
+    InvalidParameter {
+        parameter_name: String,
+        reason: String,
+    },
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateStateFailedDurations {
     pub total: u64,
     pub create_launcher: Option<u64>,

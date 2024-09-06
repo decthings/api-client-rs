@@ -50,6 +50,7 @@ pub struct TerminateTerminalSessionParams<'a> {
 #[serde(rename_all = "camelCase")]
 pub struct GetTerminalSessionsParams<'a, S: AsRef<str>> {
     /// Which sessions to fetch. If unspecified, all running terminals will be fetched.
+    #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub terminal_session_ids: Option<&'a [S]>,
 }

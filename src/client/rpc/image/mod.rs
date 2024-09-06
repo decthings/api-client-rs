@@ -6,27 +6,25 @@ use crate::client::StateModification;
 pub use request::*;
 pub use response::*;
 
-pub struct PersistentLauncherRpc {
+pub struct ImageRpc {
     rpc: crate::client::DecthingsClientRpc,
 }
 
-impl PersistentLauncherRpc {
+impl ImageRpc {
     pub(crate) fn new(rpc: crate::client::DecthingsClientRpc) -> Self {
         Self { rpc }
     }
 
-    pub async fn create_persistent_launcher(
+    pub async fn create_repository(
         &self,
-        params: CreatePersistentLauncherParams<'_>,
-    ) -> Result<
-        CreatePersistentLauncherResult,
-        crate::client::DecthingsRpcError<CreatePersistentLauncherError>,
-    > {
+        params: CreateRepositoryParams<'_>,
+    ) -> Result<CreateRepositoryResult, crate::client::DecthingsRpcError<CreateRepositoryError>>
+    {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.rpc
             .raw_method_call::<_, _, &[u8]>(
-                "PersistentLauncher",
-                "createPersistentLauncher",
+                "Image",
+                "createRepository",
                 params,
                 &[],
                 crate::client::RpcProtocol::Http,
@@ -40,76 +38,7 @@ impl PersistentLauncherRpc {
             .unwrap()
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
-                let res: super::Response<
-                    CreatePersistentLauncherResult,
-                    CreatePersistentLauncherError,
-                > = serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
-    pub async fn get_persistent_launchers(
-        &self,
-        params: GetPersistentLaunchersParams<'_, impl AsRef<str>>,
-    ) -> Result<
-        GetPersistentLaunchersResult,
-        crate::client::DecthingsRpcError<GetPersistentLaunchersError>,
-    > {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "PersistentLaunchers",
-                "getPersistentLaunchers",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<
-                    GetPersistentLaunchersResult,
-                    GetPersistentLaunchersError,
-                > = serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
-    pub async fn get_sysinfo(
-        &self,
-        params: GetSysinfoParams<'_>,
-    ) -> Result<GetSysinfoResult, crate::client::DecthingsRpcError<GetSysinfoError>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "PersistentLaunchers",
-                "getSysinfo",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<GetSysinfoResult, GetSysinfoError> =
+                let res: super::Response<CreateRepositoryResult, CreateRepositoryError> =
                     serde_json::from_slice(&x.0)?;
                 match res {
                     super::Response::Result(val) => Ok(val),
@@ -118,18 +47,16 @@ impl PersistentLauncherRpc {
             })
     }
 
-    pub async fn delete_persistent_launcher(
+    pub async fn update_repository(
         &self,
-        params: DeletePersistentLauncherParams<'_>,
-    ) -> Result<
-        DeletePersistentLauncherResult,
-        crate::client::DecthingsRpcError<DeletePersistentLauncherError>,
-    > {
+        params: UpdateRepositoryParams<'_>,
+    ) -> Result<UpdateRepositoryResult, crate::client::DecthingsRpcError<UpdateRepositoryError>>
+    {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.rpc
             .raw_method_call::<_, _, &[u8]>(
-                "PersistentLaunchers",
-                "deletePersistentLauncher",
+                "Image",
+                "updateRepository",
                 params,
                 &[],
                 crate::client::RpcProtocol::Http,
@@ -143,7 +70,71 @@ impl PersistentLauncherRpc {
             .unwrap()
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
-                let res = serde_json::from_slice(&x.0)?;
+                let res: super::Response<UpdateRepositoryResult, UpdateRepositoryError> =
+                    serde_json::from_slice(&x.0)?;
+                match res {
+                    super::Response::Result(val) => Ok(val),
+                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
+                }
+            })
+    }
+
+    pub async fn delete_repository(
+        &self,
+        params: DeleteRepositoryParams<'_>,
+    ) -> Result<DeleteRepositoryResult, crate::client::DecthingsRpcError<DeleteRepositoryError>>
+    {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        self.rpc
+            .raw_method_call::<_, _, &[u8]>(
+                "Image",
+                "deleteRepository",
+                params,
+                &[],
+                crate::client::RpcProtocol::Http,
+                |x| {
+                    tx.send(x).ok();
+                    StateModification::empty()
+                },
+            )
+            .await;
+        rx.await
+            .unwrap()
+            .map_err(crate::client::DecthingsRpcError::Request)
+            .and_then(|x| {
+                let res: super::Response<DeleteRepositoryResult, DeleteRepositoryError> =
+                    serde_json::from_slice(&x.0)?;
+                match res {
+                    super::Response::Result(val) => Ok(val),
+                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
+                }
+            })
+    }
+
+    pub async fn get_repositories(
+        &self,
+        params: GetRepositoriesParams<'_, impl AsRef<str>>,
+    ) -> Result<GetRepositoriesResult, crate::client::DecthingsRpcError<GetRepositoriesError>> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        self.rpc
+            .raw_method_call::<_, _, &[u8]>(
+                "Image",
+                "getRepositories",
+                params,
+                &[],
+                crate::client::RpcProtocol::Http,
+                |x| {
+                    tx.send(x).ok();
+                    StateModification::empty()
+                },
+            )
+            .await;
+        rx.await
+            .unwrap()
+            .map_err(crate::client::DecthingsRpcError::Request)
+            .and_then(|x| {
+                let res: super::Response<GetRepositoriesResult, GetRepositoriesError> =
+                    serde_json::from_slice(&x.0)?;
                 match res {
                     super::Response::Result(val) => Ok(val),
                     super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),

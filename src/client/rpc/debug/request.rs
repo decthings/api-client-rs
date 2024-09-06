@@ -35,6 +35,7 @@ pub struct LaunchDebugSessionParams<'a> {
 #[serde(rename_all = "camelCase")]
 pub struct GetDebugSessionsParams<'a, S: AsRef<str>> {
     /// Which sessions to fetch. If unspecified, all sessions will be fetched.
+    #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub debug_session_ids: Option<&'a [S]>,
 }

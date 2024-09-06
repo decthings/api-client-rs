@@ -284,6 +284,7 @@ pub struct DecthingsClient {
     pub dataset: rpc::dataset::DatasetRpc,
     pub debug: rpc::debug::DebugRpc,
     pub fs: rpc::fs::FsRpc,
+    pub image: rpc::image::ImageRpc,
     #[cfg(feature = "events")]
     pub language: rpc::language::LanguageRpc,
     pub model: rpc::model::ModelRpc,
@@ -305,6 +306,7 @@ impl DecthingsClient {
             dataset: rpc::dataset::DatasetRpc::new(rpc.clone()),
             debug: rpc::debug::DebugRpc::new(rpc.clone()),
             fs: rpc::fs::FsRpc::new(rpc.clone()),
+            image: rpc::image::ImageRpc::new(rpc.clone()),
             #[cfg(feature = "events")]
             language: rpc::language::LanguageRpc::new(rpc.clone()),
             model: rpc::model::ModelRpc::new(rpc.clone()),

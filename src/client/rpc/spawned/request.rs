@@ -52,7 +52,7 @@ pub struct SpawnCommandForModelParams<'a, S: AsRef<str>> {
     #[serde(serialize_with = "super::super::serialize_asref_str_seq")]
     pub args: &'a [S],
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub options: Option<SpawnedCommandOptions<'a>>,
+    pub options: Option<SpawnedCommandOptions>,
     /// If true, immediately subscribes you to events "stdout", "stderr" and "exit" for the spawned command. Default:
     /// true.
     #[cfg(feature = "events")]
@@ -71,6 +71,7 @@ pub struct TerminateSpawnedCommandParams<'a> {
 #[serde(rename_all = "camelCase")]
 pub struct GetSpawnedCommandsParams<'a, S: AsRef<str>> {
     /// Which spawned commands to fetch. If unspecified, all running commands will be fetched.
+    #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub spawned_command_ids: Option<&'a [S]>,
 }

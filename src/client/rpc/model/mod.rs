@@ -1,10 +1,10 @@
 mod request;
 mod response;
 
+use crate::{client::StateModification, tensor::OwnedDecthingsTensor};
+
 pub use request::*;
 pub use response::*;
-
-use crate::{client::StateModification, tensor::OwnedDecthingsTensor};
 
 pub struct ModelRpc {
     rpc: crate::client::DecthingsClientRpc,

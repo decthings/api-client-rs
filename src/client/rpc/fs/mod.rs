@@ -1,10 +1,11 @@
 mod request;
 mod response;
 
+use crate::client::StateModification;
+
 pub use request::*;
 pub use response::*;
 
-use crate::client::StateModification;
 
 pub struct FsRpc {
     rpc: crate::client::DecthingsClientRpc,

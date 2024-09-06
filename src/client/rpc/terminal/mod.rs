@@ -1,11 +1,10 @@
 mod request;
 mod response;
 
+use crate::client::StateModification;
+
 pub use request::*;
 pub use response::*;
-use serde::Serialize;
-
-use crate::client::StateModification;
 
 pub struct TerminalRpc {
     rpc: crate::client::DecthingsClientRpc,
@@ -149,7 +148,7 @@ impl TerminalRpc {
 
     pub async fn get_terminal_sessions(
         &self,
-        params: GetTerminalSessionsParams<'_, impl AsRef<str> + Serialize>,
+        params: GetTerminalSessionsParams<'_, impl AsRef<str>>,
     ) -> Result<GetTerminalSessionsResult, crate::client::DecthingsRpcError<GetTerminalSessionsError>>
     {
         let (tx, rx) = tokio::sync::oneshot::channel();
