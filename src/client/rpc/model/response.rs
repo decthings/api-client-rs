@@ -263,6 +263,15 @@ pub enum Language {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ModelImage {
+    pub domain: String,
+    pub repository: String,
+    pub reference: String,
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DefaultLauncherSpecs {
     pub create_state: LauncherSpec,
     pub evaluate: LauncherSpec,
@@ -307,6 +316,14 @@ pub struct ModelState {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SnapshotImage {
+    pub domain: String,
+    pub repository: String,
+    pub reference: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SnapshotState {
     pub name: String,
     pub state: Vec<StateKey>,
@@ -323,6 +340,7 @@ pub struct ModelSnapshot {
     pub parameter_definitions: ParameterDefinitions,
     pub default_launcher_specs: DefaultLauncherSpecs,
     pub max_durations_seconds: MaxDurationsSeconds,
+    pub image: SnapshotImage,
     pub state: SnapshotState,
 }
 
@@ -347,6 +365,7 @@ pub struct Model {
     pub being_created: bool,
     pub language: Language,
     pub wasm: bool,
+    pub image: ModelImage,
     pub parameter_definitions: ParameterDefinitions,
     pub default_launcher_specs: DefaultLauncherSpecs,
     pub max_durations_seconds: MaxDurationsSeconds,
