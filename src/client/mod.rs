@@ -193,7 +193,6 @@ impl DecthingsClientRpc {
     }
 
     /// Call an RPC method on the server.
-    /// You most likely want to use the helper classes (client.model, client.data, etc.) instead.
     ///
     /// Returns false if the request is not sent (and on_result is not called). This happens if
     /// mode is RpcProtocol::WsIfAvailableOtherwiseNone and no WebSocket is connected.
@@ -315,6 +314,29 @@ impl DecthingsClient {
             terminal: rpc::terminal::TerminalRpc::new(rpc.clone()),
             rpc,
         }
+    }
+
+    /// Call an RPC method on the server.
+    ///
+    /// You most likely want to use the helper classes (client.model, client.dataset, etc.) instead.
+    pub async fn raw_method_call<P: serde::Serialize, D: AsRef<[u8]>>(
+        &self,
+        api: &str,
+        method: &str,
+        params: P,
+        data: impl AsRef<[D]>,
+    ) -> Result<(bytes::Bytes, Vec<bytes::Bytes>), DecthingsClientError> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        self.rpc
+            .raw_method_call(api, method, params, data, RpcProtocol::Http, |res| {
+                tx.send(res).ok();
+                StateModification {
+                    add_events: vec![],
+                    remove_events: vec![],
+                }
+            })
+            .await;
+        rx.await.unwrap()
     }
 
     #[cfg(feature = "events")]
