@@ -18,6 +18,7 @@ pub struct CreateModelResult {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum CreateModelError {
+    NameAlreadyUsed,
     ModelNotFound,
     SnapshotNotFound,
     QuotaExceeded,
@@ -226,6 +227,7 @@ pub struct UpdateModelResult {}
 pub enum UpdateModelError {
     ModelNotFound,
     AccessDenied,
+    NameAlreadyUsed,
     BadCredentials,
     TooManyRequests,
     PaymentRequired,

@@ -56,6 +56,9 @@ pub struct GetDatasetsFilter<'a, S: AsRef<str>> {
     #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ids: Option<&'a [S]>,
+    #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub names: Option<&'a [S]>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub search_name: Option<&'a str>,
 }

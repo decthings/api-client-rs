@@ -13,6 +13,7 @@ pub struct CreateDatasetResult {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum CreateDatasetError {
+    NameAlreadyUsed,
     QuotaExceeded,
     BadCredentials,
     TooManyRequests,
@@ -34,6 +35,7 @@ pub struct UpdateDatasetResult {}
 pub enum UpdateDatasetError {
     DatasetNotFound,
     AccessDenied,
+    NameAlreadyUsed,
     BadCredentials,
     TooManyRequests,
     PaymentRequired,
