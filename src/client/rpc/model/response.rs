@@ -269,7 +269,11 @@ pub struct ModelImage {
     pub domain: String,
     pub repository: String,
     pub reference: String,
-    pub error: Option<String>,
+    pub digest: String,
+    pub target_domain: String,
+    pub target_repository: String,
+    pub target_reference: String,
+    pub target_error: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -322,6 +326,7 @@ pub struct SnapshotImage {
     pub domain: String,
     pub repository: String,
     pub reference: String,
+    pub digest: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
