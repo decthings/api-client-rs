@@ -67,6 +67,27 @@ impl<'a> DecthingsTensor<'a> {
         }
     }
 
+    pub fn typ(&self) -> super::DecthingsElementType {
+        match self {
+            Self::F32(_) => super::DecthingsElementType::F32,
+            Self::F64(_) => super::DecthingsElementType::F64,
+            Self::I8(_) => super::DecthingsElementType::I8,
+            Self::I16(_) => super::DecthingsElementType::I16,
+            Self::I32(_) => super::DecthingsElementType::I32,
+            Self::I64(_) => super::DecthingsElementType::I64,
+            Self::U8(_) => super::DecthingsElementType::U8,
+            Self::U16(_) => super::DecthingsElementType::U16,
+            Self::U32(_) => super::DecthingsElementType::U32,
+            Self::U64(_) => super::DecthingsElementType::U64,
+            Self::String(_) => super::DecthingsElementType::String,
+            Self::Binary(_) => super::DecthingsElementType::Binary,
+            Self::Boolean(_) => super::DecthingsElementType::Boolean,
+            Self::Image(_) => super::DecthingsElementType::Image,
+            Self::Audio(_) => super::DecthingsElementType::Audio,
+            Self::Video(_) => super::DecthingsElementType::Video,
+        }
+    }
+
     pub fn shape(&self) -> &[usize] {
         match self {
             Self::F32(inner) => inner.shape(),
@@ -101,10 +122,10 @@ impl<'a> DecthingsTensor<'a> {
     ///
     /// Returns an array that is either owned or not. If the data was of type f64, the returned
     /// array is borrowed. Otherwise a new array is created, so the returned array is owned.
-    pub fn as_f64(self) -> Option<CowArray<'a, f64, IxDyn>> {
+    pub fn as_f64(&'a self) -> Option<CowArray<'a, f64, IxDyn>> {
         match self {
             Self::F32(val) => Some(CowArray::from(val.map(|x| (*x).into()))),
-            Self::F64(val) => Some(val),
+            Self::F64(val) => Some(val.into()),
             Self::I8(val) => Some(CowArray::from(val.map(|x| (*x).into()))),
             Self::I16(val) => Some(CowArray::from(val.map(|x| (*x).into()))),
             Self::I32(val) => Some(CowArray::from(val.map(|x| (*x).into()))),
@@ -119,7 +140,7 @@ impl<'a> DecthingsTensor<'a> {
 
     /// If this is a numeric type (f32, f64, u8, u16, u32, u64, i8, i16, i32 or i64) with length 1, casts the
     /// single element to an f64 and returns it.
-    pub fn as_f64_item(self) -> Option<f64> {
+    pub fn as_f64_item(&self) -> Option<f64> {
         if self.len() != 1 {
             return None;
         }
@@ -163,7 +184,7 @@ impl<'a> DecthingsTensor<'a> {
 
     /// If this is a numeric type (f32, f64, u8, u16, u32, u64, i8, i16, i32 or i64) with length 1, casts the
     /// single element to an i64 and returns it.
-    pub fn as_i64_item(self) -> Option<i64> {
+    pub fn as_i64_item(&self) -> Option<i64> {
         if self.len() != 1 {
             return None;
         }
@@ -202,7 +223,7 @@ impl<'a> DecthingsTensor<'a> {
 
     /// If this is a numeric type (f32, f64, u8, u16, u32, u64, i8, i16, i32 or i64) with length 1, casts the
     /// single element to an u64 and returns it.
-    pub fn as_u64_item(self) -> Option<u64> {
+    pub fn as_u64_item(&self) -> Option<u64> {
         if self.len() != 1 {
             return None;
         }
