@@ -63,6 +63,14 @@ pub(super) enum Response<R, E> {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct LauncherSpecGpus {
+    /// GPU type, such as "L4" or "A100 80GB"
+    pub model: String,
+    pub count: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LauncherSpec {
     pub cpus: f64,
     pub memory_mebibytes: u32,
@@ -70,6 +78,8 @@ pub struct LauncherSpec {
     pub disk_mebibytes: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub swap_mebibytes: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gpus: Option<LauncherSpecGpus>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
