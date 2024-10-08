@@ -1,4 +1,7 @@
-use crate::{client::rpc::Tag, client::DecthingsParameterDefinition, tensor::OwnedDecthingsTensor};
+use crate::{
+    client::rpc::Tag,
+    tensor::{DecthingsParameterDefinition, OwnedDecthingsTensor},
+};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]

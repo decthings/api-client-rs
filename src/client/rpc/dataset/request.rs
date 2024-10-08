@@ -1,5 +1,6 @@
 use crate::{
-    client::rpc::TagProvider, client::DecthingsParameterDefinition, tensor::DecthingsTensor,
+    client::rpc::TagProvider,
+    tensor::{DecthingsParameterDefinition, DecthingsTensor},
 };
 use serde::Serialize;
 

@@ -1,6 +1,6 @@
 use serde::{ser::SerializeSeq, Deserialize, Serialize, Serializer};
 
-use crate::client::DecthingsParameterDefinition;
+use crate::tensor::DecthingsParameterDefinition;
 
 pub mod dataset;
 pub mod debug;

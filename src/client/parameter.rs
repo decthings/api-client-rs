@@ -1,13 +1,6 @@
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::tensor::{DecthingsTensor, DecthingsTensorRules, OwnedDecthingsTensor};
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DecthingsParameterDefinition {
-    pub name: String,
-    pub rules: DecthingsTensorRules,
-}
+use crate::tensor::{DecthingsTensor, OwnedDecthingsTensor};
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]

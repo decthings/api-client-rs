@@ -38,3 +38,10 @@ pub struct DecthingsTensorRules {
     pub shape: Vec<Option<u32>>,
     pub allowed_types: Vec<DecthingsElementType>,
 }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DecthingsParameterDefinition {
+    pub name: String,
+    pub rules: DecthingsTensorRules,
+}
