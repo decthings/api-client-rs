@@ -265,6 +265,13 @@ pub enum Language {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ModelImageProgress {
+    pub total_bytes: u64,
+    pub copied_bytes: u64,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ModelImage {
     pub domain: String,
     pub repository: String,
@@ -273,6 +280,7 @@ pub struct ModelImage {
     pub target_domain: String,
     pub target_repository: String,
     pub target_reference: String,
+    pub progress: Option<ModelImageProgress>,
     pub target_error: Option<String>,
 }
 
