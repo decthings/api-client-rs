@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -47,55 +49,73 @@ impl std::fmt::Display for DecthingsElementType {
 
 #[derive(Debug)]
 pub enum SetFormatError {
-    LengthNot3Bytes,
+    FormatStringTooLong,
 }
 
 #[derive(Debug, Clone)]
 pub struct DecthingsElementImage<'a> {
-    format: &'a str,
-    pub data: &'a [u8],
+    format: Cow<'a, str>,
+    pub data: Cow<'a, [u8]>,
 }
 
 impl<'a> DecthingsElementImage<'a> {
-    pub fn new(format: &'a str, data: &'a [u8]) -> Result<Self, SetFormatError> {
-        let mut v = Self { format: "", data };
-        v.set_format(format)?;
-        Ok(v)
+    pub fn new(
+        format: impl Into<Cow<'a, str>>,
+        data: impl Into<Cow<'a, [u8]>>,
+    ) -> Result<Self, SetFormatError> {
+        let format = format.into();
+        if format.len() > u8::MAX.into() {
+            return Err(SetFormatError::FormatStringTooLong);
+        }
+        Ok(Self {
+            format,
+            data: data.into(),
+        })
     }
 
     pub fn format(&self) -> &str {
-        self.format
+        &self.format
     }
 
-    pub fn set_format(&mut self, format: &'a str) -> Result<(), SetFormatError> {
-        if format.len() != 3 {
-            return Err(SetFormatError::LengthNot3Bytes);
+    pub fn set_format(&mut self, format: impl Into<Cow<'a, str>>) -> Result<(), SetFormatError> {
+        let format = format.into();
+        if format.len() > u8::MAX.into() {
+            return Err(SetFormatError::FormatStringTooLong);
         }
-        self.format = format;
+        self.format = format.into();
         Ok(())
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct DecthingsElementAudio<'a> {
-    format: &'a str,
-    pub data: &'a [u8],
+    format: Cow<'a, str>,
+    pub data: Cow<'a, [u8]>,
 }
 
 impl<'a> DecthingsElementAudio<'a> {
-    pub fn new(format: &'a str, data: &'a [u8]) -> Result<Self, SetFormatError> {
-        let mut v = Self { format: "", data };
-        v.set_format(format)?;
-        Ok(v)
+    pub fn new(
+        format: impl Into<Cow<'a, str>>,
+        data: impl Into<Cow<'a, [u8]>>,
+    ) -> Result<Self, SetFormatError> {
+        let format = format.into();
+        if format.len() > u8::MAX.into() {
+            return Err(SetFormatError::FormatStringTooLong);
+        }
+        Ok(Self {
+            format,
+            data: data.into(),
+        })
     }
 
     pub fn format(&self) -> &str {
-        self.format
+        &self.format
     }
 
-    pub fn set_format(&mut self, format: &'a str) -> Result<(), SetFormatError> {
-        if format.len() != 3 {
-            return Err(SetFormatError::LengthNot3Bytes);
+    pub fn set_format(&mut self, format: impl Into<Cow<'a, str>>) -> Result<(), SetFormatError> {
+        let format = format.into();
+        if format.len() > u8::MAX.into() {
+            return Err(SetFormatError::FormatStringTooLong);
         }
         self.format = format;
         Ok(())
@@ -104,24 +124,33 @@ impl<'a> DecthingsElementAudio<'a> {
 
 #[derive(Debug, Clone)]
 pub struct DecthingsElementVideo<'a> {
-    format: &'a str,
-    pub data: &'a [u8],
+    format: Cow<'a, str>,
+    pub data: Cow<'a, [u8]>,
 }
 
 impl<'a> DecthingsElementVideo<'a> {
-    pub fn new(format: &'a str, data: &'a [u8]) -> Result<Self, SetFormatError> {
-        let mut v = Self { format: "", data };
-        v.set_format(format)?;
-        Ok(v)
+    pub fn new(
+        format: impl Into<Cow<'a, str>>,
+        data: impl Into<Cow<'a, [u8]>>,
+    ) -> Result<Self, SetFormatError> {
+        let format = format.into();
+        if format.len() > u8::MAX.into() {
+            return Err(SetFormatError::FormatStringTooLong);
+        }
+        Ok(Self {
+            format,
+            data: data.into(),
+        })
     }
 
     pub fn format(&self) -> &str {
-        self.format
+        &self.format
     }
 
-    pub fn set_format(&mut self, format: &'a str) -> Result<(), SetFormatError> {
-        if format.len() != 3 {
-            return Err(SetFormatError::LengthNot3Bytes);
+    pub fn set_format(&mut self, format: impl Into<Cow<'a, str>>) -> Result<(), SetFormatError> {
+        let format = format.into();
+        if format.len() > u8::MAX.into() {
+            return Err(SetFormatError::FormatStringTooLong);
         }
         self.format = format;
         Ok(())

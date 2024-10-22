@@ -339,21 +339,30 @@ impl<'a> DecthingsTensor<'a> {
                 .iter()
                 .map(|x| {
                     let len: u64 = x.data.len().try_into().unwrap();
-                    crate::varint::get_varint_u64_len(3 + len) as usize + 3 + x.data.len()
+                    crate::varint::get_varint_u64_len(1 + x.format().len() as u64 + len) as usize
+                        + 1
+                        + x.format().len()
+                        + x.data.len()
                 })
                 .sum::<usize>(),
             Self::Audio(inner) => inner
                 .iter()
                 .map(|x| {
                     let len: u64 = x.data.len().try_into().unwrap();
-                    crate::varint::get_varint_u64_len(3 + len) as usize + 3 + x.data.len()
+                    crate::varint::get_varint_u64_len(1 + x.format().len() as u64 + len) as usize
+                        + 1
+                        + x.format().len()
+                        + x.data.len()
                 })
                 .sum::<usize>(),
             Self::Video(inner) => inner
                 .iter()
                 .map(|x| {
                     let len: u64 = x.data.len().try_into().unwrap();
-                    crate::varint::get_varint_u64_len(3 + len) as usize + 3 + x.data.len()
+                    crate::varint::get_varint_u64_len(1 + x.format().len() as u64 + len) as usize
+                        + 1
+                        + x.format().len()
+                        + x.data.len()
                 })
                 .sum::<usize>(),
         };
@@ -572,9 +581,10 @@ impl<'a> DecthingsTensor<'a> {
                 );
                 inner.iter().for_each(|x| {
                     let len: u64 = x.data.len().try_into().unwrap();
-                    crate::varint::append_varint_u64(3 + len, res);
+                    crate::varint::append_varint_u64(1 + x.format().len() as u64 + len, res);
+                    res.push(x.format().len().try_into().unwrap());
                     res.extend_from_slice(x.format().as_bytes());
-                    res.extend_from_slice(x.data)
+                    res.extend_from_slice(&x.data)
                 })
             }
             Self::Audio(inner) => {
@@ -584,9 +594,10 @@ impl<'a> DecthingsTensor<'a> {
                 );
                 inner.iter().for_each(|x| {
                     let len: u64 = x.data.len().try_into().unwrap();
-                    crate::varint::append_varint_u64(3 + len, res);
+                    crate::varint::append_varint_u64(1 + x.format().len() as u64 + len, res);
+                    res.push(x.format().len().try_into().unwrap());
                     res.extend_from_slice(x.format().as_bytes());
-                    res.extend_from_slice(x.data)
+                    res.extend_from_slice(&x.data)
                 })
             }
             Self::Video(inner) => {
@@ -596,9 +607,10 @@ impl<'a> DecthingsTensor<'a> {
                 );
                 inner.iter().for_each(|x| {
                     let len: u64 = x.data.len().try_into().unwrap();
-                    crate::varint::append_varint_u64(3 + len, res);
+                    crate::varint::append_varint_u64(1 + x.format().len() as u64 + len, res);
+                    res.push(x.format().len().try_into().unwrap());
                     res.extend_from_slice(x.format().as_bytes());
-                    res.extend_from_slice(x.data)
+                    res.extend_from_slice(&x.data)
                 })
             }
         }
@@ -696,37 +708,58 @@ impl OwnedDecthingsTensor {
                             )));
                         }
                     }
-                    if matches!(first_byte, TYPE_SPEC_IMAGE) && len < 3 {
-                        if len < 3 {
+                    if matches!(first_byte, TYPE_SPEC_IMAGE) {
+                        if len < 1 {
                             return Err(DeserializeDecthingsTensorError::InvalidBytes(format!(
-                                "Expected three bytes for image format - got {len}"
+                                "Unexpected end of bytes while parsing image format"
                             )));
                         }
-                        if let Err(e) = std::str::from_utf8(&data[pos..pos + 3]) {
+                        let format_length = data[pos] as usize;
+                        if len < 1 + format_length {
+                            return Err(DeserializeDecthingsTensorError::InvalidBytes(format!(
+                                "Unexpected end of bytes while parsing image format"
+                            )));
+                        }
+                        if let Err(e) = std::str::from_utf8(&data[pos + 1..pos + 1 + format_length])
+                        {
                             return Err(DeserializeDecthingsTensorError::InvalidBytes(format!(
                                 "The image format was not UTF-8: {e:?}"
                             )));
                         }
                     }
-                    if matches!(first_byte, TYPE_SPEC_AUDIO) && len < 3 {
-                        if len < 3 {
+                    if matches!(first_byte, TYPE_SPEC_AUDIO) {
+                        if len < 1 {
                             return Err(DeserializeDecthingsTensorError::InvalidBytes(format!(
-                                "Expected three bytes for audio format - got {len}"
+                                "Unexpected end of bytes while parsing audio format"
                             )));
                         }
-                        if let Err(e) = std::str::from_utf8(&data[pos..pos + 3]) {
+                        let format_length = data[pos] as usize;
+                        if len < 1 + format_length {
+                            return Err(DeserializeDecthingsTensorError::InvalidBytes(format!(
+                                "Unexpected end of bytes while parsing audio format"
+                            )));
+                        }
+                        if let Err(e) = std::str::from_utf8(&data[pos + 1..pos + 1 + format_length])
+                        {
                             return Err(DeserializeDecthingsTensorError::InvalidBytes(format!(
                                 "The audio format was not UTF-8: {e:?}"
                             )));
                         }
                     }
-                    if matches!(first_byte, TYPE_SPEC_VIDEO) && len < 3 {
-                        if len < 3 {
+                    if matches!(first_byte, TYPE_SPEC_VIDEO) {
+                        if len < 1 {
                             return Err(DeserializeDecthingsTensorError::InvalidBytes(format!(
-                                "Expected three bytes for video format - got {len}"
+                                "Unexpected end of bytes while parsing video format"
                             )));
                         }
-                        if let Err(e) = std::str::from_utf8(&data[pos..pos + 3]) {
+                        let format_length = data[pos] as usize;
+                        if len < 1 + format_length {
+                            return Err(DeserializeDecthingsTensorError::InvalidBytes(format!(
+                                "Unexpected end of bytes while parsing video format"
+                            )));
+                        }
+                        if let Err(e) = std::str::from_utf8(&data[pos + 1..pos + 1 + format_length])
+                        {
                             return Err(DeserializeDecthingsTensorError::InvalidBytes(format!(
                                 "The video format was not UTF-8: {e:?}"
                             )));
@@ -888,9 +921,15 @@ impl OwnedDecthingsTensor {
                         crate::varint::deserialize_varint_u64(&self.data[pos..]);
                     let len: usize = len.try_into().unwrap();
                     pos += varint_len as usize;
-                    let format = std::str::from_utf8(&self.data[pos..pos + 3]).unwrap();
+                    let format_length = self.data[pos] as usize;
+                    let format =
+                        std::str::from_utf8(&self.data[pos + 1..pos + 1 + format_length]).unwrap();
                     images.push(
-                        DecthingsElementImage::new(format, &self.data[pos + 3..pos + len]).unwrap(),
+                        DecthingsElementImage::new(
+                            format,
+                            &self.data[pos + 1 + format_length..pos + len],
+                        )
+                        .unwrap(),
                     );
                     pos += len;
                 }
@@ -910,9 +949,15 @@ impl OwnedDecthingsTensor {
                         crate::varint::deserialize_varint_u64(&self.data[pos..]);
                     let len: usize = len.try_into().unwrap();
                     pos += varint_len as usize;
-                    let format = std::str::from_utf8(&self.data[pos..pos + 3]).unwrap();
+                    let format_length = self.data[pos] as usize;
+                    let format =
+                        std::str::from_utf8(&self.data[pos + 1..pos + 1 + format_length]).unwrap();
                     audios.push(
-                        DecthingsElementAudio::new(format, &self.data[pos + 3..pos + len]).unwrap(),
+                        DecthingsElementAudio::new(
+                            format,
+                            &self.data[pos + 1 + format_length..pos + len],
+                        )
+                        .unwrap(),
                     );
                     pos += len;
                 }
@@ -932,9 +977,15 @@ impl OwnedDecthingsTensor {
                         crate::varint::deserialize_varint_u64(&self.data[pos..]);
                     let len: usize = len.try_into().unwrap();
                     pos += varint_len as usize;
-                    let format = std::str::from_utf8(&self.data[pos..pos + 3]).unwrap();
+                    let format_length = self.data[pos] as usize;
+                    let format =
+                        std::str::from_utf8(&self.data[pos + 1..pos + 1 + format_length]).unwrap();
                     videos.push(
-                        DecthingsElementVideo::new(format, &self.data[pos + 3..pos + len]).unwrap(),
+                        DecthingsElementVideo::new(
+                            format,
+                            &self.data[pos + 1 + format_length..pos + len],
+                        )
+                        .unwrap(),
                     );
                     pos += len;
                 }
