@@ -37,11 +37,15 @@ pub struct DecthingsTensorRules {
     )]
     pub shape: Vec<Option<u32>>,
     pub allowed_types: Vec<DecthingsElementType>,
+    /// Annotations are used by the user interface for example to specify minimum/maximum values
+    /// for a field
+    pub annotations: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DecthingsParameterDefinition {
     pub name: String,
+    pub required: bool,
     pub rules: DecthingsTensorRules,
 }
