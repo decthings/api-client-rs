@@ -7,8 +7,10 @@ pub struct CreateRepositoryResult {}
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum CreateRepositoryError {
-    QuotaExceeded,
     NameAlreadyUsed,
+    OrganizationNotFound,
+    AccessDenied,
+    QuotaExceeded,
     BadCredentials,
     TooManyRequests,
     PaymentRequired,
@@ -61,10 +63,15 @@ pub enum DeleteRepositoryError {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RepositoryOwner {
-    pub user_id: String,
-    pub username: String,
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum RepositoryOwner {
+    #[serde(rename_all = "camelCase")]
+    User { user_id: String, username: String },
+    #[serde(rename_all = "camelCase")]
+    Organization {
+        organization_id: String,
+        organization_name: String,
+    },
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -79,6 +86,7 @@ pub enum RepositoryAccess {
 pub struct Repository {
     pub name: String,
     pub description: String,
+    pub public_access: bool,
     pub created_at: i64,
     pub owner: RepositoryOwner,
     pub access: RepositoryAccess,

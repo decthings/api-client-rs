@@ -7,6 +7,9 @@ pub struct CreateRepositoryParams<'a> {
     pub name: &'a str,
     /// A description of the repository.
     pub description: &'a str,
+    /// If true, all Decthings users can find and use this repository. Defaults to false.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub public_access: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -14,6 +17,8 @@ pub struct CreateRepositoryParams<'a> {
 pub struct UpdateRepositoryProperties<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub public_access: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize)]

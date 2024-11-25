@@ -17,6 +17,8 @@ pub struct CreateDatasetResult {
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum CreateDatasetError {
     NameAlreadyUsed,
+    OrganizationNotFound,
+    AccessDenied,
     QuotaExceeded,
     BadCredentials,
     TooManyRequests,
@@ -71,10 +73,15 @@ pub enum DeleteDatasetError {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DatasetOwner {
-    pub user_id: String,
-    pub username: String,
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum DatasetOwner {
+    #[serde(rename_all = "camelCase")]
+    User { user_id: String, username: String },
+    #[serde(rename_all = "camelCase")]
+    Organization {
+        organization_id: String,
+        organization_name: String,
+    },
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -97,6 +104,7 @@ pub struct Dataset {
     pub id: String,
     pub name: String,
     pub description: String,
+    pub public_access: bool,
     pub created_at: i64,
     pub tags: Vec<Tag>,
     pub owner: DatasetOwner,

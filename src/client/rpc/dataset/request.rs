@@ -11,6 +11,9 @@ pub struct CreateDatasetParams<'a> {
     pub name: &'a str,
     /// A description of the dataset.
     pub description: &'a str,
+    /// If true, all Decthings users can find and use this dataset. Defaults to false.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub public_access: Option<bool>,
     /// Tags are used to specify things like dataset type (image classification, etc.) and other metadata.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<&'a [TagProvider<'a>]>,
@@ -26,6 +29,8 @@ pub struct UpdateDatasetProperties<'a> {
     pub name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub public_access: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<&'a [TagProvider<'a>]>,
 }

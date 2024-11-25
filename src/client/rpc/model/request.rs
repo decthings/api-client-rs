@@ -120,6 +120,9 @@ pub struct CreateModelParams<'a, D: AsRef<[u8]>> {
     pub name: &'a str,
     /// A description of the model.
     pub description: &'a str,
+    /// If true, all Decthings users can find and use this model. Defaults to false.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub public_access: Option<bool>,
     /// Required configuration for this model, such as model type, language to use, etc.
     pub options: CreateModelOptions<'a, D>,
 }
@@ -190,6 +193,8 @@ pub struct UpdateModelProperties<'a> {
     pub name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub public_access: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<&'a [TagProvider<'a>]>,
     #[serde(skip_serializing_if = "Option::is_none")]

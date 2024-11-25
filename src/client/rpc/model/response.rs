@@ -19,6 +19,8 @@ pub struct CreateModelResult {
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum CreateModelError {
     NameAlreadyUsed,
+    OrganizationNotFound,
+    AccessDenied,
     ModelNotFound,
     SnapshotNotFound,
     QuotaExceeded,
@@ -240,10 +242,15 @@ pub enum UpdateModelError {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ModelOwner {
-    pub user_id: String,
-    pub username: String,
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum ModelOwner {
+    #[serde(rename_all = "camelCase")]
+    User { user_id: String, username: String },
+    #[serde(rename_all = "camelCase")]
+    Organization {
+        organization_id: String,
+        organization_name: String,
+    },
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -373,6 +380,7 @@ pub struct Model {
     pub id: String,
     pub name: String,
     pub description: String,
+    pub public_access: bool,
     pub created_at: i64,
     pub tags: Vec<Tag>,
     pub owner: ModelOwner,
@@ -397,7 +405,7 @@ pub struct Model {
 #[serde(rename_all = "camelCase")]
 pub struct GetModelsResult {
     pub models: Vec<Model>,
-    /// The total number of datasets that matched the filter.
+    /// The total number of models that matched the filter.
     pub total: u32,
     pub offset: u32,
     pub limit: u32,
