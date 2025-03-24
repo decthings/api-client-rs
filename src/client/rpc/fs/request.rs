@@ -10,9 +10,10 @@ fn serialize_base64<T: AsRef<[u8]>, S: serde::Serializer>(t: &T, s: S) -> Result
 pub struct LookupParams<'a, T: AsRef<[u8]>> {
     /// The model's id.
     pub model_id: &'a str,
-    /// If provided, the filesystem of the snapshot will be used. Otherwise, the filesystem of the model will be used.
+    /// If provided, the filesystem of the model version will be used. Otherwise, the filesystem of the model will be
+    /// used.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub snapshot_id: Option<&'a str>,
+    pub version_id: Option<&'a str>,
     /// Inode number of the parent directory.
     pub parent: u64,
     /// Filename within the parent directory.
@@ -25,9 +26,10 @@ pub struct LookupParams<'a, T: AsRef<[u8]>> {
 pub struct GetattrParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
-    /// If provided, the filesystem of the snapshot will be used. Otherwise, the filesystem of the model will be used.
+    /// If provided, the filesystem of the model version will be used. Otherwise, the filesystem of the model will be
+    /// used.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub snapshot_id: Option<&'a str>,
+    pub version_id: Option<&'a str>,
     /// Inode number of file.
     pub inode: u64,
 }
@@ -81,9 +83,10 @@ pub struct MknodParams<'a, T: AsRef<[u8]>> {
 pub struct ReadParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
-    /// If provided, the filesystem of the snapshot will be used. Otherwise, the filesystem of the model will be used.
+    /// If provided, the filesystem of the model version will be used. Otherwise, the filesystem of the model will be
+    /// used.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub snapshot_id: Option<&'a str>,
+    pub version_id: Option<&'a str>,
     /// Inode number of file.
     pub inode: u64,
     /// Where in the file to start reading.
@@ -128,9 +131,10 @@ pub struct SymlinkParams<'a, T1: AsRef<[u8]>, T2: AsRef<[u8]>> {
 pub struct ReadlinkParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
-    /// If provided, the filesystem of the snapshot will be used. Otherwise, the filesystem of the model will be used.
+    /// If provided, the filesystem of the model version will be used. Otherwise, the filesystem of the model will be
+    /// used.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub snapshot_id: Option<&'a str>,
+    pub version_id: Option<&'a str>,
     /// Inode number of file.
     pub inode: u64,
 }
@@ -212,9 +216,10 @@ pub struct LinkParams<'a, T: AsRef<[u8]>> {
 pub struct ReaddirParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
-    /// If provided, the filesystem of the snapshot will be used. Otherwise, the filesystem of the model will be used.
+    /// If provided, the filesystem of the model version will be used. Otherwise, the filesystem of the model will be
+    /// used.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub snapshot_id: Option<&'a str>,
+    pub version_id: Option<&'a str>,
     /// Inode number of directory.
     pub inode: u64,
 }

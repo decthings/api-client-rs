@@ -113,12 +113,18 @@ pub struct ParameterDefinitions {
 }
 
 #[derive(Debug, Clone)]
-pub struct StateKeyData {
+pub struct WeightKeyDataProvider<'a, D: AsRef<[u8]>> {
+    pub key: &'a str,
+    pub data: D,
+}
+
+#[derive(Debug, Clone)]
+pub struct WeightKeyData {
     pub key: String,
     pub data: bytes::Bytes,
 }
 
-impl<'de> Deserialize<'de> for StateKeyData {
+impl<'de> Deserialize<'de> for WeightKeyData {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,

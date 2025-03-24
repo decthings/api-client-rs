@@ -48,7 +48,6 @@ pub enum PersistentLauncherRunningType {
     Terminal,
     Spawned,
     Debug,
-    CreateModelState,
     Train,
     Evaluate,
 }

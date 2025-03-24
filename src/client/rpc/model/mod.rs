@@ -17,124 +17,13 @@ impl ModelRpc {
 
     pub async fn create_model(
         &self,
-        params: CreateModelParams<'_, impl AsRef<[u8]>>,
+        params: CreateModelParams<'_>,
     ) -> Result<CreateModelResult, crate::client::DecthingsRpcError<CreateModelError>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        match &params.options {
-            CreateModelOptions::BasedOnModelSnapshot {
-                tags: _,
-                model_id: _,
-                snapshot_id: _,
-                initial_state: CreateModelInitialState::Copy,
-            }
-            | CreateModelOptions::Code { .. }
-            | CreateModelOptions::FromExisting { .. } => {
-                self.rpc
-                    .raw_method_call::<_, _, &[u8]>(
-                        "Model",
-                        "createModel",
-                        params,
-                        &[],
-                        crate::client::RpcProtocol::Http,
-                        |x| {
-                            tx.send(x).ok();
-                            StateModification::empty()
-                        },
-                    )
-                    .await;
-            }
-            CreateModelOptions::Upload {
-                tags: _,
-                parameter_definitions: _,
-                format: _,
-                data,
-            } => {
-                self.rpc
-                    .raw_method_call::<_, _, &[u8]>(
-                        "Model",
-                        "createModel",
-                        &params,
-                        &[data.as_ref()],
-                        crate::client::RpcProtocol::Http,
-                        |x| {
-                            tx.send(x).ok();
-                            StateModification::empty()
-                        },
-                    )
-                    .await;
-            }
-            CreateModelOptions::BasedOnModelSnapshot {
-                tags: _,
-                model_id: _,
-                snapshot_id: _,
-                initial_state: CreateModelInitialState::Upload { name: _, data },
-            } => {
-                self.rpc
-                    .raw_method_call(
-                        "Model",
-                        "createModel",
-                        &params,
-                        data.iter().map(|x| &x.data).collect::<Vec<_>>(),
-                        crate::client::RpcProtocol::Http,
-                        |x| {
-                            tx.send(x).ok();
-                            StateModification::empty()
-                        },
-                    )
-                    .await;
-            }
-            CreateModelOptions::BasedOnModelSnapshot {
-                tags: _,
-                model_id: _,
-                snapshot_id: _,
-                initial_state:
-                    CreateModelInitialState::Create {
-                        name: _,
-                        params,
-                        launcher_spec: _,
-                    },
-            } => {
-                let serialized = crate::client::serialize_parameter_provider_list(params.iter());
-                self.rpc
-                    .raw_method_call(
-                        "Model",
-                        "createModel",
-                        params,
-                        serialized,
-                        crate::client::RpcProtocol::Http,
-                        |x| {
-                            tx.send(x).ok();
-                            StateModification::empty()
-                        },
-                    )
-                    .await;
-            }
-        };
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<CreateModelResult, CreateModelError> =
-                    serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
-    pub async fn wait_for_model_to_be_created(
-        &self,
-        params: WaitForModelToBeCreatedParams<'_>,
-    ) -> Result<
-        WaitForModelToBeCreatedResult,
-        crate::client::DecthingsRpcError<WaitForModelToBeCreatedError>,
-    > {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.rpc
             .raw_method_call::<_, _, &[u8]>(
                 "Model",
-                "waitForModelToBeCrated",
+                "createModel",
                 params,
                 &[],
                 crate::client::RpcProtocol::Http,
@@ -148,10 +37,8 @@ impl ModelRpc {
             .unwrap()
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
-                let res: super::Response<
-                    WaitForModelToBeCreatedResult,
-                    WaitForModelToBeCreatedError,
-                > = serde_json::from_slice(&x.0)?;
+                let res: super::Response<CreateModelResult, CreateModelError> =
+                    serde_json::from_slice(&x.0)?;
                 match res {
                     super::Response::Result(val) => Ok(val),
                     super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
@@ -190,99 +77,6 @@ impl ModelRpc {
             })
     }
 
-    pub async fn snapshot_model(
-        &self,
-        params: SnapshotModelParams<'_>,
-    ) -> Result<SnapshotModelResult, crate::client::DecthingsRpcError<SnapshotModelError>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "Model",
-                "snapshotModel",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<SnapshotModelResult, SnapshotModelError> =
-                    serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
-    pub async fn update_snapshot(
-        &self,
-        params: UpdateSnapshotParams<'_>,
-    ) -> Result<UpdateSnapshotResult, crate::client::DecthingsRpcError<UpdateSnapshotError>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "Model",
-                "updateSnapshot",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<UpdateSnapshotResult, UpdateSnapshotError> =
-                    serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
-    pub async fn delete_snapshot(
-        &self,
-        params: DeleteSnapshotParams<'_>,
-    ) -> Result<DeleteSnapshotResult, crate::client::DecthingsRpcError<DeleteSnapshotError>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "Model",
-                "deleteSnapshot",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<DeleteSnapshotResult, DeleteSnapshotError> =
-                    serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
     pub async fn update_model(
         &self,
         params: UpdateModelParams<'_>,
@@ -313,6 +107,7 @@ impl ModelRpc {
                 }
             })
     }
+
     pub async fn get_models(
         &self,
         params: GetModelsParams<'_, impl AsRef<str>>,
@@ -343,6 +138,7 @@ impl ModelRpc {
                 }
             })
     }
+
     pub async fn set_filesystem_size(
         &self,
         params: SetFilesystemSizeParams<'_>,
@@ -374,47 +170,18 @@ impl ModelRpc {
                 }
             })
     }
-    pub async fn get_filesystem_usage(
+
+    pub async fn create_model_version(
         &self,
-        params: GetFilesystemUsageParams<'_>,
-    ) -> Result<GetFilesystemUsageResult, crate::client::DecthingsRpcError<GetFilesystemUsageError>>
+        params: CreateModelVersionParams<'_>,
+    ) -> Result<CreateModelVersionResult, crate::client::DecthingsRpcError<CreateModelVersionError>>
     {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "Model",
-                "getFilesystemUsage",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<GetFilesystemUsageResult, GetFilesystemUsageError> =
-                    serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-    pub async fn create_state(
-        &self,
-        params: CreateStateParams<'_>,
-    ) -> Result<CreateStateResult, crate::client::DecthingsRpcError<CreateStateError>> {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let serialized = crate::client::serialize_parameter_provider_list(params.params.iter());
         self.rpc
             .raw_method_call(
                 "Model",
-                "createState",
+                "createModelVersion",
                 params,
                 serialized,
                 crate::client::RpcProtocol::Http,
@@ -428,7 +195,7 @@ impl ModelRpc {
             .unwrap()
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
-                let res: super::Response<CreateStateResult, CreateStateError> =
+                let res: super::Response<CreateModelVersionResult, CreateModelVersionError> =
                     serde_json::from_slice(&x.0)?;
                 match res {
                     super::Response::Result(val) => Ok(val),
@@ -437,16 +204,19 @@ impl ModelRpc {
             })
     }
 
-    pub async fn upload_state(
+    pub async fn create_model_version_upload_weights(
         &self,
-        params: UploadStateParams<'_, impl AsRef<str>, impl AsRef<[u8]>>,
-    ) -> Result<UploadStateResult, crate::client::DecthingsRpcError<UploadStateError>> {
+        params: CreateModelVersionUploadWeightsParams<'_, impl AsRef<[u8]>>,
+    ) -> Result<
+        CreateModelVersionUploadWeightsResult,
+        crate::client::DecthingsRpcError<CreateModelVersionUploadWeightsError>,
+    > {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let data = params.data.iter().map(|x| &x.data).collect::<Vec<_>>();
         self.rpc
             .raw_method_call(
                 "Model",
-                "uploadState",
+                "createModelVersionUploadWeights",
                 params,
                 data,
                 crate::client::RpcProtocol::Http,
@@ -460,107 +230,9 @@ impl ModelRpc {
             .unwrap()
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
-                let res: super::Response<UploadStateResult, UploadStateError> =
-                    serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
-    pub async fn cancel_create_state(
-        &self,
-        params: CancelCreateStateParams<'_>,
-    ) -> Result<CancelCreateStateResult, crate::client::DecthingsRpcError<CancelCreateStateError>>
-    {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "Model",
-                "cancelCreateState",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<CancelCreateStateResult, CancelCreateStateError> =
-                    serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
-    pub async fn get_creating_states(
-        &self,
-        params: GetCreatingStatesParams<'_>,
-    ) -> Result<GetCreatingStatesResult, crate::client::DecthingsRpcError<GetCreatingStatesError>>
-    {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "Model",
-                "getCreatingStates",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<GetCreatingStatesResult, GetCreatingStatesError> =
-                    serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
-    pub async fn wait_for_state_to_be_created(
-        &self,
-        params: WaitForStateToBeCreatedParams<'_>,
-    ) -> Result<
-        WaitForStateToBeCreatedResult,
-        crate::client::DecthingsRpcError<WaitForStateToBeCreatedError>,
-    > {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "Model",
-                "waitForStateToBeCreated",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
                 let res: super::Response<
-                    WaitForStateToBeCreatedResult,
-                    WaitForStateToBeCreatedError,
+                    CreateModelVersionUploadWeightsResult,
+                    CreateModelVersionUploadWeightsError,
                 > = serde_json::from_slice(&x.0)?;
                 match res {
                     super::Response::Result(val) => Ok(val),
@@ -569,16 +241,16 @@ impl ModelRpc {
             })
     }
 
-    pub async fn update_model_state(
+    pub async fn update_model_version(
         &self,
-        params: UpdateModelStateParams<'_>,
-    ) -> Result<UpdateModelStateResult, crate::client::DecthingsRpcError<UpdateModelStateError>>
+        params: UpdateModelVersionParams<'_>,
+    ) -> Result<UpdateModelVersionResult, crate::client::DecthingsRpcError<UpdateModelVersionError>>
     {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.rpc
             .raw_method_call::<_, _, &[u8]>(
                 "Model",
-                "updateModelState",
+                "updateModelVersion",
                 params,
                 &[],
                 crate::client::RpcProtocol::Http,
@@ -592,7 +264,7 @@ impl ModelRpc {
             .unwrap()
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
-                let res: super::Response<UpdateModelStateResult, UpdateModelStateError> =
+                let res: super::Response<UpdateModelVersionResult, UpdateModelVersionError> =
                     serde_json::from_slice(&x.0)?;
                 match res {
                     super::Response::Result(val) => Ok(val),
@@ -601,16 +273,15 @@ impl ModelRpc {
             })
     }
 
-    pub async fn set_active_model_state(
+    pub async fn get_weights(
         &self,
-        params: SetActiveModelStateParams<'_>,
-    ) -> Result<SetActiveModelStateResult, crate::client::DecthingsRpcError<SetActiveModelStateError>>
-    {
+        params: GetWeightsParams<'_, impl AsRef<str>>,
+    ) -> Result<GetWeightsResult, crate::client::DecthingsRpcError<GetWeightsError>> {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.rpc
             .raw_method_call::<_, _, &[u8]>(
                 "Model",
-                "setActiveModelState",
+                "getWeights",
                 params,
                 &[],
                 crate::client::RpcProtocol::Http,
@@ -624,78 +295,15 @@ impl ModelRpc {
             .unwrap()
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
-                let res: super::Response<SetActiveModelStateResult, SetActiveModelStateError> =
+                let res: super::Response<GetWeightsResult, GetWeightsError> =
                     serde_json::from_slice(&x.0)?;
                 match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
-    pub async fn delete_model_state(
-        &self,
-        params: DeleteModelStateParams<'_>,
-    ) -> Result<DeleteModelStateResult, crate::client::DecthingsRpcError<DeleteModelStateError>>
-    {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "Model",
-                "deleteModelState",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<DeleteModelStateResult, DeleteModelStateError> =
-                    serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(val),
-                    super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
-                }
-            })
-    }
-
-    pub async fn get_model_state(
-        &self,
-        params: GetModelStateParams<'_, impl AsRef<str>>,
-    ) -> Result<GetModelStateResult, crate::client::DecthingsRpcError<GetModelStateError>> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.rpc
-            .raw_method_call::<_, _, &[u8]>(
-                "Model",
-                "getModelState",
-                params,
-                &[],
-                crate::client::RpcProtocol::Http,
-                |x| {
-                    tx.send(x).ok();
-                    StateModification::empty()
-                },
-            )
-            .await;
-        rx.await
-            .unwrap()
-            .map_err(crate::client::DecthingsRpcError::Request)
-            .and_then(|x| {
-                let res: super::Response<GetModelStateResult, GetModelStateError> =
-                    serde_json::from_slice(&x.0)?;
-                match res {
-                    super::Response::Result(val) => Ok(GetModelStateResult {
+                    super::Response::Result(val) => Ok(GetWeightsResult {
                         data: val
                             .data
                             .into_iter()
                             .zip(x.1)
-                            .map(|(key, data)| super::StateKeyData { key: key.key, data })
+                            .map(|(key, data)| super::WeightKeyData { key: key.key, data })
                             .collect(),
                     }),
                     super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
@@ -703,16 +311,16 @@ impl ModelRpc {
             })
     }
 
-    pub async fn get_snapshot_state(
+    pub async fn delete_model_version(
         &self,
-        params: GetSnapshotStateParams<'_, impl AsRef<str>>,
-    ) -> Result<GetSnapshotStateResult, crate::client::DecthingsRpcError<GetSnapshotStateError>>
+        params: DeleteModelVersionParams<'_>,
+    ) -> Result<DeleteModelVersionResult, crate::client::DecthingsRpcError<DeleteModelVersionError>>
     {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.rpc
             .raw_method_call::<_, _, &[u8]>(
                 "Model",
-                "getSnapshotState",
+                "deleteModelVersion",
                 params,
                 &[],
                 crate::client::RpcProtocol::Http,
@@ -726,17 +334,10 @@ impl ModelRpc {
             .unwrap()
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
-                let res: super::Response<GetSnapshotStateResult, GetSnapshotStateError> =
+                let res: super::Response<DeleteModelVersionResult, DeleteModelVersionError> =
                     serde_json::from_slice(&x.0)?;
                 match res {
-                    super::Response::Result(val) => Ok(GetSnapshotStateResult {
-                        data: val
-                            .data
-                            .into_iter()
-                            .zip(x.1)
-                            .map(|(key, data)| super::StateKeyData { key: key.key, data })
-                            .collect(),
-                    }),
+                    super::Response::Result(val) => Ok(val),
                     super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
                 }
             })
@@ -947,8 +548,7 @@ impl ModelRpc {
                 let res: super::Response<EvaluateResult, EvaluateError> =
                     serde_json::from_slice(&x.0)?;
                 match res {
-                    super::Response::Result(EvaluateResult::Success {
-                        total_duration,
+                    super::Response::Result(EvaluateResult {
                         durations,
                         executed_on_launcher,
                         mut output,
@@ -960,14 +560,12 @@ impl ModelRpc {
                             entry.data = super::many_decthings_tensors_from_bytes(data)
                                 .map_err(|_| crate::client::DecthingsClientError::InvalidMessage)?;
                         }
-                        Ok(EvaluateResult::Success {
-                            total_duration,
+                        Ok(EvaluateResult {
                             durations,
                             executed_on_launcher,
                             output,
                         })
                     }
-                    super::Response::Result(val) => Ok(val),
                     super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
                 }
             })
@@ -1034,8 +632,7 @@ impl ModelRpc {
                     GetFinishedEvaluationResultError,
                 > = serde_json::from_slice(&x.0)?;
                 match res {
-                    super::Response::Result(GetFinishedEvaluationResultResult::Success {
-                        total_duration,
+                    super::Response::Result(GetFinishedEvaluationResultResult {
                         durations,
                         executed_on_launcher,
                         mut output,
@@ -1050,14 +647,12 @@ impl ModelRpc {
                         Ok::<
                             GetFinishedEvaluationResultResult,
                             crate::client::DecthingsRpcError<GetFinishedEvaluationResultError>,
-                        >(GetFinishedEvaluationResultResult::Success {
-                            total_duration,
+                        >(GetFinishedEvaluationResultResult {
                             durations,
                             executed_on_launcher,
                             output,
                         })
                     }
-                    super::Response::Result(val) => Ok(val),
                     super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),
                 }
             })

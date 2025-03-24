@@ -178,19 +178,19 @@ impl DebugRpc {
         rx.await.unwrap()
     }
 
-    pub async fn call_create_model_state<D>(
+    pub async fn call_initialize_weights<D>(
         &self,
-        params: CallCreateModelStateParams<'_>,
+        params: CallInitializeWeightsParams<'_>,
     ) -> Result<
-        CallCreateModelStateResult,
-        crate::client::DecthingsRpcError<CallCreateModelStateError>,
+        CallInitializeWeightsResult,
+        crate::client::DecthingsRpcError<CallInitializeWeightsError>,
     > {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let serialized = crate::client::serialize_parameter_provider_list(params.params.iter());
         self.rpc
             .raw_method_call(
                 "Debug",
-                "callCreateModelState",
+                "callInitializeWeights",
                 params,
                 serialized,
                 crate::client::RpcProtocol::Http,
@@ -205,8 +205,8 @@ impl DebugRpc {
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
                 let res: super::Response<
-                    response::CallCreateModelStateResult,
-                    response::CallCreateModelStateError,
+                    response::CallInitializeWeightsResult,
+                    response::CallInitializeWeightsError,
                 > = serde_json::from_slice(&x.0)?;
                 match res {
                     super::Response::Result(val) => Ok(val),
@@ -223,8 +223,8 @@ impl DebugRpc {
         crate::client::DecthingsRpcError<CallInstantiateModelError>,
     > {
         let (tx, rx) = tokio::sync::oneshot::channel();
-        let serialized = match &params.state_data {
-            StateDataProvider::Data { data } => *data,
+        let serialized = match &params.weights {
+            WeightDataProvider::Data { data } => *data,
             _ => &[],
         };
         self.rpc
@@ -449,16 +449,15 @@ impl DebugRpc {
             })
     }
 
-    pub async fn call_get_model_state(
+    pub async fn call_get_weights(
         &self,
-        params: CallGetModelStateParams<'_>,
-    ) -> Result<CallGetModelStateResult, crate::client::DecthingsRpcError<CallGetModelStateError>>
-    {
+        params: CallGetWeightsParams<'_>,
+    ) -> Result<CallGetWeightsResult, crate::client::DecthingsRpcError<CallGetWeightsError>> {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.rpc
             .raw_method_call::<_, _, &[u8]>(
                 "Debug",
-                "callGetModelState",
+                "callGetWeights",
                 params,
                 &[],
                 crate::client::RpcProtocol::Http,
@@ -473,8 +472,8 @@ impl DebugRpc {
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
                 let res: super::Response<
-                    response::CallGetModelStateResult,
-                    response::CallGetModelStateError,
+                    response::CallGetWeightsResult,
+                    response::CallGetWeightsError,
                 > = serde_json::from_slice(&x.0)?;
                 match res {
                     super::Response::Result(val) => Ok(val),
@@ -483,16 +482,16 @@ impl DebugRpc {
             })
     }
 
-    pub async fn download_state_data(
+    pub async fn download_weight_data(
         &self,
-        params: DownloadStateDataParams<'_, impl AsRef<str>>,
-    ) -> Result<DownloadStateDataResult, crate::client::DecthingsRpcError<DownloadStateDataError>>
+        params: DownloadWeightDataParams<'_, impl AsRef<str>>,
+    ) -> Result<DownloadWeightDataResult, crate::client::DecthingsRpcError<DownloadWeightDataError>>
     {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.rpc
             .raw_method_call::<_, _, &[u8]>(
                 "Debug",
-                "downloadStateData",
+                "downloadWeightData",
                 params,
                 &[],
                 crate::client::RpcProtocol::Http,
@@ -507,16 +506,16 @@ impl DebugRpc {
             .map_err(crate::client::DecthingsRpcError::Request)
             .and_then(|x| {
                 let res: super::Response<
-                    response::DownloadStateDataResult,
-                    response::DownloadStateDataError,
+                    response::DownloadWeightDataResult,
+                    response::DownloadWeightDataError,
                 > = serde_json::from_slice(&x.0)?;
                 match res {
-                    super::Response::Result(val) => Ok(DownloadStateDataResult {
+                    super::Response::Result(val) => Ok(DownloadWeightDataResult {
                         data: val
                             .data
                             .into_iter()
                             .zip(x.1)
-                            .map(|(key, data)| super::StateKeyData { key: key.key, data })
+                            .map(|(key, data)| super::WeightKeyData { key: key.key, data })
                             .collect(),
                     }),
                     super::Response::Error(val) => Err(crate::client::DecthingsRpcError::Rpc(val)),

@@ -49,7 +49,7 @@ pub struct TerminateDebugSessionParams<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CallCreateModelStateParams<'a> {
+pub struct CallInitializeWeightsParams<'a> {
     /// The debug session's id.
     pub debug_session_id: &'a str,
     /// Parameters to provide to the function.
@@ -57,18 +57,18 @@ pub struct CallCreateModelStateParams<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct StateData<'a, D: AsRef<[u8]>> {
+pub struct WeightKeyData<'a, D: AsRef<[u8]>> {
     pub key: &'a str,
     pub data: D,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
-pub enum StateDataProvider<'a, D: AsRef<[u8]>> {
+pub enum WeightDataProvider<'a, D: AsRef<[u8]>> {
     #[serde(rename_all = "camelCase")]
     Data {
         #[serde(skip_serializing)]
-        data: &'a [StateData<'a, D>],
+        data: &'a [WeightKeyData<'a, D>],
     },
     #[serde(rename_all = "camelCase")]
     DataId { data_id: &'a str },
@@ -80,8 +80,8 @@ pub enum StateDataProvider<'a, D: AsRef<[u8]>> {
 pub struct CallInstantiateModelParams<'a, D: AsRef<[u8]>> {
     /// The debug session's id.
     pub debug_session_id: &'a str,
-    /// Data to use as model state.
-    pub state_data: StateDataProvider<'a, D>,
+    /// Data to use as weights.
+    pub weights: WeightDataProvider<'a, D>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -145,7 +145,7 @@ pub struct CallEvaluateParams<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CallGetModelStateParams<'a> {
+pub struct CallGetWeightsParams<'a> {
     /// The debug session's id.
     pub debug_session_id: &'a str,
     /// Identifier of the instantiated model to use, as returned by the 'callInstantiateModel' function.
@@ -154,12 +154,12 @@ pub struct CallGetModelStateParams<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DownloadStateDataParams<'a, S: AsRef<str>> {
+pub struct DownloadWeightDataParams<'a, S: AsRef<str>> {
     /// The debug session's id.
     pub debug_session_id: &'a str,
-    /// The data's id, as returned by 'callCreateModelState' or 'callGetModelState'.
+    /// The data's id, as returned by 'callInitializeWeights' or 'callGetWeights'.
     pub data_id: &'a str,
-    /// Which state keys to fetch. Defaults to all keys.
+    /// Which weight keys to fetch. Defaults to all keys.
     #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keys: Option<&'a [S]>,

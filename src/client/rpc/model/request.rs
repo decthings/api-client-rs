@@ -1,121 +1,43 @@
-use crate::{
-    client::rpc::{ExecutionLocationProvider, LauncherSpec, ParameterDefinitions, TagProvider},
-    client::DecthingsParameterProvider,
+use crate::client::{
+    rpc::{ExecutionLocationProvider, ParameterDefinitions, TagProvider, WeightKeyDataProvider},
+    DecthingsParameterProvider,
 };
 use serde::Serialize;
 
-#[derive(Debug, Clone)]
-pub struct StateKeyData<'a, D: AsRef<[u8]>> {
-    pub key: &'a str,
-    pub data: D,
-}
-
-impl<D: AsRef<[u8]>> serde::Serialize for StateKeyData<'_, D> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(self.key)
-    }
-}
-
 #[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase", tag = "method")]
-#[serde(bound(serialize = ""))]
-pub enum CreateModelInitialState<'a, D: AsRef<[u8]>> {
-    Copy,
-    #[serde(rename_all = "camelCase")]
-    Create {
-        name: &'a str,
-        params: Vec<DecthingsParameterProvider<'a>>,
-        launcher_spec: &'a LauncherSpec,
-    },
-    #[serde(rename_all = "camelCase")]
-    Upload {
-        name: &'a str,
-        #[serde(rename = "stateKeyNames")]
-        data: &'a [StateKeyData<'a, D>],
-    },
-}
-
-impl<'a> CreateModelInitialState<'a, &'static [u8]> {
-    pub fn copy() -> Self {
-        Self::Copy
-    }
-}
-impl<'a> CreateModelInitialState<'a, &'static [u8]> {
-    pub fn create(
-        name: &'a str,
-        params: Vec<DecthingsParameterProvider<'a>>,
-        launcher_spec: &'a LauncherSpec,
-    ) -> Self {
-        Self::Create {
-            name,
-            params,
-            launcher_spec,
-        }
-    }
-}
-impl<'a, D: AsRef<[u8]>> CreateModelInitialState<'a, D> {
-    pub fn upload(name: &'a str, data: &'a [StateKeyData<'a, D>]) -> Self {
-        Self::Upload { name, data }
-    }
+#[serde(rename_all = "camelCase")]
+pub enum Language {
+    Javascript,
+    Typescript,
+    Python,
+    Rust,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
-#[serde(bound(serialize = ""))]
-pub enum CreateModelOptions<'a, D: AsRef<[u8]>> {
+pub enum CreateModelOptions<'a> {
     #[serde(rename_all = "camelCase")]
     Code {
-        /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        tags: Option<&'a [TagProvider<'a>]>,
         #[serde(skip_serializing_if = "Option::is_none")]
         parameter_definitions: Option<ParameterDefinitions>,
-        language: super::response::Language,
-        /// At the time of writing, presets "none", "empty", "tensorflowjs", "pytorch" and "tensorflow" are available.
+        language: Language,
         #[serde(skip_serializing_if = "Option::is_none")]
         preset: Option<&'a str>,
         #[serde(skip_serializing_if = "Option::is_none")]
         wasm: Option<bool>,
     },
     #[serde(rename_all = "camelCase")]
-    Upload {
-        /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        tags: Option<&'a [TagProvider<'a>]>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        parameter_definitions: Option<ParameterDefinitions>,
-        /// At the time of writing, formats "tflite" and "onnx" are available.
-        format: &'a str,
-        #[serde(skip_serializing)]
-        data: D,
+    BasedOnModel {
+        model_id: &'a str,
+        version_id: &'a str,
     },
     #[serde(rename_all = "camelCase")]
-    BasedOnModelSnapshot {
-        /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        tags: Option<&'a [TagProvider<'a>]>,
-        model_id: &'a str,
-        snapshot_id: &'a str,
-        initial_state: CreateModelInitialState<'a, D>,
-    },
-    #[serde(rename_all = "camelCase")]
-    FromExisting {
-        /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        tags: Option<&'a [TagProvider<'a>]>,
-        model_id: &'a str,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        snapshot_id: Option<&'a str>,
-    },
+    DuplicateExisting { model_id: &'a str },
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(bound(serialize = ""))]
-pub struct CreateModelParams<'a, D: AsRef<[u8]>> {
+pub struct CreateModelParams<'a> {
     /// The model's name.
     pub name: &'a str,
     /// A description of the model.
@@ -123,15 +45,11 @@ pub struct CreateModelParams<'a, D: AsRef<[u8]>> {
     /// If true, all Decthings users can find and use this model. Defaults to false.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub public_access: Option<bool>,
+    /// Tags are used to specify things like model type (image classifier, etc.) and other metadata.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<&'a [TagProvider<'a>]>,
     /// Required configuration for this model, such as model type, language to use, etc.
-    pub options: CreateModelOptions<'a, D>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WaitForModelToBeCreatedParams<'a> {
-    /// The model's id.
-    pub model_id: &'a str,
+    pub options: CreateModelOptions<'a>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -139,51 +57,6 @@ pub struct WaitForModelToBeCreatedParams<'a> {
 pub struct DeleteModelParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SnapshotModelParams<'a> {
-    /// The model's id.
-    pub model_id: &'a str,
-    /// The name of the snapshot.
-    pub snapshot_name: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateSnapshotProperties<'a> {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<&'a str>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateSnapshotParams<'a> {
-    /// The model's id.
-    pub model_id: &'a str,
-    /// The snapshot's id.
-    pub snapshot_id: &'a str,
-    /// Properties and values to change. Empty fields will not be changed.
-    pub properties: UpdateSnapshotProperties<'a>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteSnapshotParams<'a> {
-    /// The model's id.
-    pub model_id: &'a str,
-    /// The snapshot's id.
-    pub snapshot_id: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct OptionalDefaultLauncherSpecs<'a> {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub create_state: Option<&'a LauncherSpec>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub evaluate: Option<&'a LauncherSpec>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -197,12 +70,6 @@ pub struct UpdateModelProperties<'a> {
     pub public_access: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<&'a [TagProvider<'a>]>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parameter_definitions: Option<ParameterDefinitions>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub default_launcher_specs: Option<OptionalDefaultLauncherSpecs<'a>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_durations_seconds: Option<super::response::MaxDurationsSeconds>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -270,156 +137,68 @@ pub struct SetFilesystemSizeParams<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetFilesystemUsageParams<'a> {
-    /// The model's id.
-    pub model_id: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SetImageParams<'a> {
-    /// The model's id.
-    pub model_id: &'a str,
-    /// The domain name to load from, i.e "docker.io" or "registry.decthings.com"
-    pub domain: &'a str,
-    /// The repository to use, i.e "library/ubuntu"
-    pub repository: &'a str,
-    /// The tag to use, to, i.e "latest"
-    pub reference: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateStateMountModel<'a> {
-    /// Id of the other model to mount.
-    pub model_id: &'a str,
-    /// Specifies which state on the other model to use. Defaults to the active state.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub state_id: Option<&'a str>,
-    /// If specified, this snapshot on the other model will be used. Cannot be used together with stateId, as the state
-    /// in the snapshot will be used if snapshotId is specified.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub snapshot_id: Option<&'a str>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateStateParams<'a> {
-    /// The model's id.
-    pub model_id: &'a str,
-    /// Name of the new state.
-    pub name: &'a str,
-    /// Parameters to provide to the createModelState function on the running model.
-    pub params: Vec<DecthingsParameterProvider<'a>>,
-    /// Allows your model to access to files and state of these additional models. Can be useful for merging models
-    /// together.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mount_models: Option<&'a [CreateStateMountModel<'a>]>,
-    /// Which launcher to use for running the operation.
-    pub execution_location: ExecutionLocationProvider<'a>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct MountModel<'a> {
     /// Id of the other model to mount.
     pub model_id: &'a str,
-    /// If specified, this snapshot on the other model will be used.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub snapshot_id: Option<&'a str>,
+    /// Version within the other model to mount.
+    pub version_id: &'a str,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UploadStateParams<'a, S: AsRef<str>, D: AsRef<[u8]>> {
+pub struct CreateModelVersionParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
-    /// Name of the new state.
-    pub name: &'a str,
-    /// Data to upload.
-    #[serde(skip_serializing)]
-    pub data: &'a [StateKeyData<'a, D>],
-    /// If provided, these states will be deleted when the new state has been uploaded, in a single atomic operation.
-    /// If either the upload or the delete fails, both the upload and the delete operations are aborted and an error is
-    /// returned.
-    #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub delete_states: Option<&'a [S]>,
-    /// Allows your model to access to files of these additional models. Can be useful for merging models together.
+    /// The name of the version.
+    pub version_name: &'a str,
+    /// Parameters to provide to the initializeWeights function on the running model.
+    pub params: Vec<DecthingsParameterProvider<'a>>,
+    /// Allows your model to execute these additional models. Can be useful for merging models together.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mount_models: Option<&'a [MountModel<'a>]>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CancelCreateStateParams<'a> {
+pub struct CreateModelVersionUploadWeightsParams<'a, D: AsRef<[u8]>> {
     /// The model's id.
     pub model_id: &'a str,
-    /// The state's id.
-    pub state_id: &'a str,
+    /// The name of the version.
+    pub version_name: &'a str,
+    /// Data to upload.
+    #[serde(skip_serializing)]
+    pub data: &'a [WeightKeyDataProvider<'a, D>],
+    /// Allows your model to execute these additional models. Can be useful for merging models together.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mount_models: Option<&'a [MountModel<'a>]>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetCreatingStatesParams<'a> {
-    /// The model's id.
-    pub model_id: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WaitForStateToBeCreatedParams<'a> {
-    /// The model's id.
-    pub model_id: &'a str,
-    /// The state's id.
-    pub state_id: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateModelStateProperties<'a> {
+pub struct UpdateVersionProperties<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateModelStateParams<'a> {
+pub struct UpdateModelVersionParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
-    /// The state's id.
-    pub state_id: &'a str,
+    /// The version's id.
+    pub version_id: &'a str,
     /// Properties and values to change. Empty fields will not be changed.
-    pub properties: UpdateModelStateProperties<'a>,
+    pub properties: UpdateVersionProperties<'a>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SetActiveModelStateParams<'a> {
+pub struct GetWeightsParams<'a, S: AsRef<str>> {
     /// The model's id.
     pub model_id: &'a str,
-    /// The state's id.
-    pub state_id: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteModelStateParams<'a> {
-    /// The model's id.
-    pub model_id: &'a str,
-    /// The state's id.
-    pub state_id: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetModelStateParams<'a, S: AsRef<str>> {
-    /// The model's id.
-    pub model_id: &'a str,
-    /// The state's id. Defaults to the active state.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub state_id: Option<&'a str>,
-    /// Which keys to fetch. Defaults to all keys.
+    /// The model version's id.
+    pub version_id: &'a str,
+    /// Which weight keys to fetch. Defaults to all keys.
     #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keys: Option<&'a [S]>,
@@ -427,15 +206,11 @@ pub struct GetModelStateParams<'a, S: AsRef<str>> {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetSnapshotStateParams<'a, S: AsRef<str>> {
+pub struct DeleteModelVersionParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
-    /// The snapshot's id.
-    pub snapshot_id: &'a str,
-    /// Which keys to fetch. Defaults to all keys.
-    #[serde(serialize_with = "super::super::serialize_option_asref_str_seq")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub keys: Option<&'a [S]>,
+    /// The model version's id.
+    pub version_id: &'a str,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -443,11 +218,10 @@ pub struct GetSnapshotStateParams<'a, S: AsRef<str>> {
 pub struct TrainParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
-    /// Which state to use when instantiating the model. Defaults to the active state.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub state_id: Option<&'a str>,
-    /// A name to give the new state once it is created.
-    pub new_state_name: &'a str,
+    /// The model version to use.
+    pub version_id: &'a str,
+    /// A name to give the new model version once it is created.
+    pub new_version_name: &'a str,
     /// Parameters to provide to the train function on the running model.
     pub params: Vec<DecthingsParameterProvider<'a>>,
     /// Which launcher to use for running the operation.
@@ -519,9 +293,8 @@ pub struct EvaluateParams<'a> {
     pub model_id: &'a str,
     /// Parameters to provide to the train function on the running model.
     pub params: Vec<DecthingsParameterProvider<'a>>,
-    /// If provided, the snapshot with this id will be evaluated.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub snapshot_id: Option<&'a str>,
+    /// The model version to evaluate.
+    pub version_id: &'a str,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -561,6 +334,8 @@ pub struct PersistentLauncherToUse<'a> {
 pub struct SetUsedPersistentLaunchersForEvaluateParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
+    /// The model version's id.
+    pub version_id: &'a str,
     pub persistent_launchers: &'a [PersistentLauncherToUse<'a>],
 }
 
@@ -569,4 +344,6 @@ pub struct SetUsedPersistentLaunchersForEvaluateParams<'a> {
 pub struct GetUsedPersistentLaunchersForEvaluateParams<'a> {
     /// The model's id.
     pub model_id: &'a str,
+    /// The model version's id.
+    pub version_id: &'a str,
 }

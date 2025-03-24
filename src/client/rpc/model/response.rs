@@ -1,5 +1,5 @@
 use crate::{
-    client::rpc::{ExecutionLocation, LauncherSpec, ParameterDefinitions, StateKeyData, Tag},
+    client::rpc::{ExecutionLocation, LauncherSpec, ParameterDefinitions, Tag, WeightKeyData},
     client::DecthingsParameter,
     tensor::OwnedDecthingsTensor,
 };
@@ -10,9 +10,6 @@ use serde::{Deserialize, Serialize};
 pub struct CreateModelResult {
     /// A unique identifier which you should use in subsequent API calls.
     pub model_id: String,
-    /// Will be true if an initial state is being create, which means the model is being created until the operation is
-    /// finished.
-    pub is_now_creating: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -22,106 +19,9 @@ pub enum CreateModelError {
     OrganizationNotFound,
     AccessDenied,
     ModelNotFound,
-    SnapshotNotFound,
+    ModelVersionNotFound,
     QuotaExceeded,
     ServerOverloaded,
-    InvalidExecutableFile,
-    ReadExecutableFileFailed,
-    #[serde(rename_all = "camelCase")]
-    DatasetNotFound {
-        dataset_id: String,
-    },
-    #[serde(rename_all = "camelCase")]
-    DatasetKeyNotFound {
-        dataset_id: String,
-        dataset_key: String,
-    },
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum AtCodeStartupOrCreateState {
-    CodeStartup,
-    CreateState,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum CreateModelFailedCreateStateError {
-    InvalidExecutableFile,
-    ReadExecutableFileFailed,
-    LauncherTerminated,
-    #[serde(rename_all = "camelCase")]
-    MaxDurationExceeded {
-        at: AtCodeStartupOrCreateState,
-    },
-    #[serde(rename_all = "camelCase")]
-    CodeTerminated {
-        exit_code: Option<i32>,
-        signal: Option<String>,
-        oom: bool,
-    },
-    #[serde(rename_all = "camelCase")]
-    Exception {
-        at: AtCodeStartupOrCreateState,
-        exception_details: Option<String>,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateModelFailedInitialStateDurations {
-    pub create_launcher: u64,
-    pub code_startup: Option<u64>,
-    pub create_state: Option<u64>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum CreateModelFailedError {
-    Cancelled,
-    ServerOverloaded,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    CreateStateError {
-        details: CreateModelFailedCreateStateError,
-        create_initial_state_durations: CreateModelFailedInitialStateDurations,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateModelInitialStateDurations {
-    pub create_launcher: u64,
-    pub code_startup: u64,
-    pub create_state: u64,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum WaitForModelToBeCreatedResult {
-    #[serde(rename_all = "camelCase")]
-    CreateModelFailed { error: CreateModelFailedError },
-    #[serde(rename_all = "camelCase")]
-    CreateModelSuccess {
-        create_initial_state_durations: CreateModelInitialStateDurations,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum WaitForModelToBeCreatedError {
-    ModelNotFound,
-    ModelAlreadyCreated,
     BadCredentials,
     TooManyRequests,
     PaymentRequired,
@@ -141,73 +41,6 @@ pub struct DeleteModelResult {}
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum DeleteModelError {
     ModelNotFound,
-    AccessDenied,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SnapshotModelResult {
-    /// A unique identifier which you should use in subsequent API calls.
-    pub snapshot_id: String,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum SnapshotModelError {
-    ModelNotFound,
-    AccessDenied,
-    QuotaExceeded,
-    ServerOverloaded,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateSnapshotResult {}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum UpdateSnapshotError {
-    ModelNotFound,
-    SnapshotNotFound,
-    AccessDenied,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteSnapshotResult {}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum DeleteSnapshotError {
-    ModelNotFound,
-    SnapshotNotFound,
     AccessDenied,
     BadCredentials,
     TooManyRequests,
@@ -260,84 +93,45 @@ pub enum ModelAccess {
     Readwrite,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum Language {
-    Go,
-    Javascript,
-    Typescript,
-    Python,
-    Rust,
-}
-
 #[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ModelImageProgress {
-    pub total_bytes: u64,
-    pub copied_bytes: u64,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ModelImage {
-    pub domain: String,
-    pub repository: String,
-    pub reference: String,
-    pub digest: String,
-    pub target_domain: String,
-    pub target_repository: String,
-    pub target_reference: String,
-    pub progress: Option<ModelImageProgress>,
-    pub target_error: Option<String>,
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum ModelSource {
+    #[serde(rename_all = "camelCase")]
+    Code {
+        filesystem_size_mebibytes: u32,
+        block_size: u64,
+        total_blocks: u64,
+        free_blocks: u64,
+        total_inodes: u64,
+        free_inodes: u64,
+    },
+    #[serde(rename_all = "camelCase")]
+    Model {
+        model_id: String,
+        version_id: String,
+    },
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DefaultLauncherSpecs {
-    pub create_state: LauncherSpec,
+    pub initialize_weights: LauncherSpec,
     pub evaluate: LauncherSpec,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MaxDurationsSeconds {
     pub code_startup: u32,
     pub instantiate_model: u32,
-    pub create_state: u32,
+    pub initialize_weights: u32,
     pub train: u32,
     pub evaluate: u32,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StateKey {
-    pub key: String,
-    pub byte_size: u64,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct StateMountedModel {
-    pub model_id: String,
-    pub snapshot_id: Option<String>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ModelState {
-    pub id: String,
-    pub name: String,
-    /// Identifiers of all the training operations that have been performed to reach this state.
-    pub training_operations: Vec<String>,
-    pub created_at: i64,
-    pub being_deleted: bool,
-    pub state: Vec<StateKey>,
-    pub mounted_models: Vec<StateMountedModel>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SnapshotImage {
+pub struct Image {
     pub domain: String,
     pub repository: String,
     pub reference: String,
@@ -346,32 +140,53 @@ pub struct SnapshotImage {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SnapshotState {
-    pub name: String,
-    pub state: Vec<StateKey>,
-    pub mounted_models: Vec<StateMountedModel>,
+pub struct ConfigFile {
+    pub parameter_definitions: ParameterDefinitions,
+    pub default_launcher_specs: DefaultLauncherSpecs,
+    pub max_durations_seconds: MaxDurationsSeconds,
+    pub image: Image,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ModelSnapshot {
+pub struct MountedModel {
+    pub model_id: String,
+    pub version_id: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WeightKey {
+    pub key: String,
+    pub byte_size: u64,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "state")]
+pub enum VersionStatus {
+    InitializingWeights,
+    #[serde(rename_all = "camelCase")]
+    Training {
+        training_session_id: String,
+    },
+    #[serde(rename_all = "camelCase")]
+    Created {
+        weights: Vec<WeightKey>,
+    },
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelVersion {
     pub id: String,
     pub name: String,
     pub created_at: i64,
     pub filesystem_size_mebibytes: u32,
-    pub parameter_definitions: ParameterDefinitions,
-    pub default_launcher_specs: DefaultLauncherSpecs,
-    pub max_durations_seconds: MaxDurationsSeconds,
-    pub image: SnapshotImage,
-    pub state: SnapshotState,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BasedOnSnapshot {
-    pub model_id: String,
-    pub snapshot_id: String,
-    pub no_longer_exists: bool,
+    pub config: ConfigFile,
+    pub mounted_models: Vec<MountedModel>,
+    /// IDs of all the training operations that have been performed to reach this state.
+    pub training_operations: Vec<String>,
+    pub status: VersionStatus,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -385,20 +200,8 @@ pub struct Model {
     pub tags: Vec<Tag>,
     pub owner: ModelOwner,
     pub access: ModelAccess,
-    pub being_created: bool,
-    pub language: Language,
-    pub wasm: bool,
-    pub image: ModelImage,
-    pub parameter_definitions: ParameterDefinitions,
-    pub default_launcher_specs: DefaultLauncherSpecs,
-    pub max_durations_seconds: MaxDurationsSeconds,
-    pub filesystem_size_mebibytes: u32,
-    pub ongoing_training_sessions: Vec<String>,
-    pub training_sessions: Vec<String>,
-    pub states: Vec<ModelState>,
-    pub active_state: String,
-    pub snapshots: Vec<ModelSnapshot>,
-    pub based_on_snapshot: Option<BasedOnSnapshot>,
+    pub source: ModelSource,
+    pub versions: Vec<ModelVersion>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -433,7 +236,7 @@ pub struct SetFilesystemSizeResult {}
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum SetFilesystemSizeError {
     ModelNotFound,
-    InvalidExecutorType,
+    InvalidModelSourceType,
     NotEnoughSpace,
     AccessDenied,
     QuotaExceeded,
@@ -451,75 +254,47 @@ pub enum SetFilesystemSizeError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetFilesystemUsageResult {
-    pub block_size: u64,
-    pub total_blocks: u64,
-    pub free_blocks: u64,
-    pub total_inodes: u64,
-    pub free_inodes: u64,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum GetFilesystemUsageError {
-    ModelNotFound,
-    NotEnoughSpace,
-    AccessDenied,
-    QuotaExceeded,
-    ServerOverloaded,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SetImageResult {}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum SetImageError {
-    ModelNotFound,
-    AccessDenied,
-    ImageNotFound,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateStateFailedDurations {
+pub struct InitializeWeightsDurations {
     pub total: u64,
     pub create_launcher: Option<u64>,
     pub code_startup: Option<u64>,
-    pub create_state: Option<u64>,
+    pub initialize_weights: u64,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InitializeWeightsFailedDurations {
+    pub total: u64,
+    pub create_launcher: Option<u64>,
+    pub code_startup: Option<u64>,
+    pub initialize_weights: Option<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ModelFunction {
+    #[serde(rename = "codeStartup")]
+    CodeStartup,
+    #[serde(rename = "initializeWeights")]
+    InitializeWeights,
+    #[serde(rename = "loadWeights")]
+    LoadWeights,
+    Evaluate,
+    Train,
+    #[serde(rename = "getWeights")]
+    GetWeights,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
-pub enum CreateStateFailedReason {
-    LauncherTerminated,
+pub enum InitializeWeightsFailedReason {
     Cancelled,
-    ServerOverloaded,
     InvalidExecutableFile,
     ReadExecutableFileFailed,
-    Unknown,
+    LauncherTerminated,
     #[serde(rename_all = "camelCase")]
     MaxDurationExceeded {
-        at: AtCodeStartupOrCreateState,
+        at: ModelFunction,
     },
     #[serde(rename_all = "camelCase")]
     CodeTerminated {
@@ -529,46 +304,29 @@ pub enum CreateStateFailedReason {
     },
     #[serde(rename_all = "camelCase")]
     Exception {
-        at: AtCodeStartupOrCreateState,
+        at: ModelFunction,
         exception_details: Option<String>,
     },
+    ServerOverloaded,
+    Unknown,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateStateDurations {
-    pub total: u64,
-    pub create_launcher: Option<u64>,
-    pub code_startup: Option<u64>,
-    pub create_state: u64,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum CreateStateResult {
-    #[serde(rename_all = "camelCase")]
-    Failed {
-        durations: CreateStateFailedDurations,
-        error: CreateStateFailedReason,
-    },
-    #[serde(rename_all = "camelCase")]
-    Success {
-        durations: CreateStateDurations,
-        state_id: String,
-    },
+pub struct CreateModelVersionResult {
+    /// A unique identifier which you should use in subsequent API calls.
+    pub version_id: String,
+    pub initialize_weights_durations: InitializeWeightsDurations,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
-pub enum CreateStateError {
+pub enum CreateModelVersionError {
     ModelNotFound,
-    ModelToMountNotFound,
-    StateForModelToMountNotFound,
-    SnapshotForModelToMountNotFound,
-    PersistentLauncherNotFound,
-    SnapshotNoLongerExists,
     AccessDenied,
     QuotaExceeded,
+    ModelToMountNotFound,
+    VersionForModelToMountNotFound,
     #[serde(rename_all = "camelCase")]
     DatasetNotFound {
         dataset_id: String,
@@ -578,6 +336,12 @@ pub enum CreateStateError {
         dataset_id: String,
         dataset_key: String,
     },
+    #[serde(rename_all = "camelCase")]
+    InitializeWeightsFailed {
+        durations: InitializeWeightsFailedDurations,
+        reason: InitializeWeightsFailedReason,
+    },
+    ServerOverloaded,
     BadCredentials,
     TooManyRequests,
     PaymentRequired,
@@ -591,20 +355,20 @@ pub enum CreateStateError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UploadStateResult {
-    pub state_id: String,
+pub struct CreateModelVersionUploadWeightsResult {
+    /// A unique identifier which you should use in subsequent API calls.
+    pub version_id: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
-pub enum UploadStateError {
+pub enum CreateModelVersionUploadWeightsError {
     ModelNotFound,
-    ModelToMountNotFound,
-    SnapshotForModelToMountNotFound,
     AccessDenied,
     QuotaExceeded,
-    StateNotFound,
-    StateIsActive,
+    ModelToMountNotFound,
+    VersionForModelToMountNotFound,
+    ServerOverloaded,
     BadCredentials,
     TooManyRequests,
     PaymentRequired,
@@ -618,95 +382,13 @@ pub enum UploadStateError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CancelCreateStateResult {}
+pub struct UpdateModelVersionResult {}
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
-pub enum CancelCreateStateError {
+pub enum UpdateModelVersionError {
     ModelNotFound,
-    StateNotFound,
-    StateAlreadyCreated,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreatingState {
-    pub id: String,
-    pub name: String,
-    pub started_at: i64,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetCreatingStatesResult {
-    pub states: Vec<CreatingState>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum GetCreatingStatesError {
-    ModelNotFound,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum WaitForStateToBeCreatedResult {
-    #[serde(rename_all = "camelCase")]
-    Failed {
-        durations: CreateStateFailedDurations,
-        error: CreateStateFailedReason,
-    },
-    #[serde(rename_all = "camelCase")]
-    Success {
-        durations: CreateStateDurations,
-        state_id: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum WaitForStateToBeCreatedError {
-    ModelNotFound,
-    StateNotFound,
-    StateAlreadyCreated,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateModelStateResult {}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum UpdateModelStateError {
-    ModelNotFound,
-    StateNotFound,
+    ModelVersionNotFound,
     AccessDenied,
     BadCredentials,
     TooManyRequests,
@@ -721,84 +403,38 @@ pub enum UpdateModelStateError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SetActiveModelStateResult {}
+pub struct GetWeightsResult {
+    #[serde(skip_deserializing)]
+    pub data: Vec<WeightKeyData>,
+}
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
-pub enum SetActiveModelStateError {
+pub enum GetWeightsError {
     ModelNotFound,
-    StateNotFound,
+    ModelVersionNotFound,
+    WeightKeyNotFound,
+    BadCredentials,
+    TooManyRequests,
+    PaymentRequired,
+    Unknown,
+    #[serde(rename_all = "camelCase")]
+    InvalidParameter {
+        parameter_name: String,
+        reason: String,
+    },
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteModelVersionResult {}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "code")]
+pub enum DeleteModelVersionError {
+    ModelNotFound,
+    ModelVersionNotFound,
     AccessDenied,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteModelStateResult {}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum DeleteModelStateError {
-    ModelNotFound,
-    StateNotFound,
-    StateIsActive,
-    AccessDenied,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetModelStateResult {
-    #[serde(rename = "stateKeyNames")]
-    pub data: Vec<StateKeyData>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum GetModelStateError {
-    ModelNotFound,
-    StateNotFound,
-    StateKeyNotFound,
-    BadCredentials,
-    TooManyRequests,
-    PaymentRequired,
-    Unknown,
-    #[serde(rename_all = "camelCase")]
-    InvalidParameter {
-        parameter_name: String,
-        reason: String,
-    },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetSnapshotStateResult {
-    #[serde(rename = "stateKeyNames")]
-    pub data: Vec<StateKeyData>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "code")]
-pub enum GetSnapshotStateError {
-    ModelNotFound,
-    SnapshotNotFound,
-    StateKeyNotFound,
     BadCredentials,
     TooManyRequests,
     PaymentRequired,
@@ -821,8 +457,8 @@ pub struct TrainResult {
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum TrainError {
     ModelNotFound,
+    ModelVersionNotFound,
     PersistentLauncherNotFound,
-    SnapshotNoLongerExists,
     AccessDenied,
     QuotaExceeded,
     #[serde(rename_all = "camelCase")]
@@ -858,31 +494,19 @@ pub struct TrainMetric {
 pub struct TrainingStartDurations {
     pub create_launcher: Option<u64>,
     pub code_startup: Option<u64>,
-    pub create_instantiated_model: Option<u64>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum AtCodeStartupOrInstantiateModelOrTrainOrGetState {
-    CodeStartup,
-    InstantiateModel,
-    Train,
-    GetState,
+    pub instantiate_model: Option<u64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum TrainingSessionFailReason {
     Cancelled,
-    LauncherTerminated,
-    ServerOverloaded,
     InvalidExecutableFile,
     ReadExecutableFileFailed,
-    Unknown,
+    LauncherTerminated,
     #[serde(rename_all = "camelCase")]
-    Exception {
-        at: AtCodeStartupOrInstantiateModelOrTrainOrGetState,
-        exception_details: Option<String>,
+    MaxDurationExceeded {
+        at: ModelFunction,
     },
     #[serde(rename_all = "camelCase")]
     CodeTerminated {
@@ -891,9 +515,12 @@ pub enum TrainingSessionFailReason {
         oom: bool,
     },
     #[serde(rename_all = "camelCase")]
-    MaxDurationExceeded {
-        at: AtCodeStartupOrInstantiateModelOrTrainOrGetState,
+    Exception {
+        at: ModelFunction,
+        exception_details: Option<String>,
     },
+    ServerOverloaded,
+    Unknown,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -906,7 +533,7 @@ pub enum TrainingStatus {
         progress: f32,
     },
     #[serde(rename_all = "camelCase")]
-    GettingState {
+    GettingWeights {
         start_durations: TrainingStartDurations,
         train_duration: u64,
     },
@@ -914,15 +541,15 @@ pub enum TrainingStatus {
     Completed {
         start_durations: TrainingStartDurations,
         train_duration: u64,
-        get_state_duration: u64,
+        get_weights_duration: u64,
         finished_at: i64,
-        created_state_id: String,
+        created_version_id: String,
     },
     #[serde(rename_all = "camelCase")]
     Failed {
         start_durations: TrainingStartDurations,
         train_duration: Option<u64>,
-        get_state_duration: Option<u64>,
+        get_weights_duration: Option<u64>,
         finished_at: i64,
         fail_reason: TrainingSessionFailReason,
     },
@@ -933,7 +560,8 @@ pub enum TrainingStatus {
 pub struct GetTrainingStatusResult {
     pub id: String,
     pub model_id: String,
-    pub new_state_name: String,
+    pub version_id: String,
+    pub new_version_name: String,
     pub created_at: i64,
     pub metrics: Vec<TrainMetric>,
     pub execution_location: ExecutionLocation,
@@ -1071,19 +699,22 @@ pub enum ClearPreviousTrainingSessionError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FailedEvaluationDurations {
+pub struct EvaluateDurations {
+    pub total: u64,
     pub create_launcher: Option<u64>,
     pub code_startup: Option<u64>,
-    pub create_instantiated_model: Option<u64>,
-    pub evaluate: Option<u64>,
+    pub instantiate_model: Option<u64>,
+    pub evaluate: u64,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum AtCodeStartupOrInstantiateModelOrEvaluate {
-    CodeStartup,
-    InstantiateModel,
-    Evaluate,
+pub struct EvaluateFailedDurations {
+    pub total: u64,
+    pub create_launcher: Option<u64>,
+    pub code_startup: Option<u64>,
+    pub instantiate_model: Option<u64>,
+    pub evaluate: Option<u64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -1095,16 +726,14 @@ pub enum InvalidOutputType {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
-pub enum FailedEvaluationError {
-    LauncherTerminated,
+pub enum EvaluateFailedReason {
     Cancelled,
-    ServerOverloaded,
     InvalidExecutableFile,
     ReadExecutableFileFailed,
-    Unknown,
+    LauncherTerminated,
     #[serde(rename_all = "camelCase")]
     MaxDurationExceeded {
-        at: AtCodeStartupOrInstantiateModelOrEvaluate,
+        at: ModelFunction,
     },
     #[serde(rename_all = "camelCase")]
     CodeTerminated {
@@ -1114,9 +743,11 @@ pub enum FailedEvaluationError {
     },
     #[serde(rename_all = "camelCase")]
     Exception {
-        at: AtCodeStartupOrInstantiateModelOrEvaluate,
+        at: ModelFunction,
         exception_details: Option<String>,
     },
+    ServerOverloaded,
+    Unknown,
     #[serde(rename_all = "camelCase")]
     InvalidOutput {
         reason: InvalidOutputType,
@@ -1126,37 +757,17 @@ pub enum FailedEvaluationError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct EvaluationDurations {
-    pub create_launcher: Option<u64>,
-    pub code_startup: Option<u64>,
-    pub create_instantiated_model: Option<u64>,
-    pub evaluate: u64,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum EvaluateResult {
-    #[serde(rename_all = "camelCase")]
-    Failed {
-        total_duration: u64,
-        durations: FailedEvaluationDurations,
-        executed_on_launcher: ExecutionLocation,
-        error: FailedEvaluationError,
-    },
-    #[serde(rename_all = "camelCase")]
-    Success {
-        total_duration: u64,
-        durations: EvaluationDurations,
-        executed_on_launcher: ExecutionLocation,
-        output: Vec<DecthingsParameter>,
-    },
+pub struct EvaluateResult {
+    pub durations: EvaluateDurations,
+    pub executed_on_launcher: ExecutionLocation,
+    pub output: Vec<DecthingsParameter>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum EvaluateError {
     ModelNotFound,
-    SnapshotNotFound,
+    ModelVersionNotFound,
     QuotaExceeded,
     #[serde(rename_all = "camelCase")]
     DatasetNotFound {
@@ -1168,6 +779,12 @@ pub enum EvaluateError {
         dataset_key: String,
     },
     ModelToMountNoLongerExists,
+    #[serde(rename_all = "camelCase")]
+    EvaluateFailed {
+        durations: EvaluateFailedDurations,
+        executed_on_launcher: ExecutionLocation,
+        reason: EvaluateFailedReason,
+    },
     BadCredentials,
     TooManyRequests,
     PaymentRequired,
@@ -1183,6 +800,7 @@ pub enum EvaluateError {
 #[serde(rename_all = "camelCase")]
 pub struct RunningEvaluation {
     pub id: String,
+    pub version_id: String,
     pub started_at: i64,
 }
 
@@ -1190,6 +808,7 @@ pub struct RunningEvaluation {
 #[serde(rename_all = "camelCase")]
 pub struct FinishedEvaluation {
     pub id: String,
+    pub version_id: String,
     pub started_at: i64,
     pub finished_at: i64,
     pub success: bool,
@@ -1219,21 +838,10 @@ pub enum GetEvaluationsError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum GetFinishedEvaluationResultResult {
-    #[serde(rename_all = "camelCase")]
-    Failed {
-        total_duration: u64,
-        durations: FailedEvaluationDurations,
-        executed_on_launcher: ExecutionLocation,
-        error: FailedEvaluationError,
-    },
-    #[serde(rename_all = "camelCase")]
-    Success {
-        total_duration: u64,
-        durations: EvaluationDurations,
-        executed_on_launcher: ExecutionLocation,
-        output: Vec<DecthingsParameter>,
-    },
+pub struct GetFinishedEvaluationResultResult {
+    pub durations: EvaluateDurations,
+    pub executed_on_launcher: ExecutionLocation,
+    pub output: Vec<DecthingsParameter>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -1241,6 +849,12 @@ pub enum GetFinishedEvaluationResultResult {
 pub enum GetFinishedEvaluationResultError {
     ModelNotFound,
     EvaluationNotFound,
+    #[serde(rename_all = "camelCase")]
+    EvaluateFailed {
+        durations: EvaluateFailedDurations,
+        executed_on_launcher: ExecutionLocation,
+        reason: EvaluateFailedReason,
+    },
     BadCredentials,
     TooManyRequests,
     PaymentRequired,
@@ -1281,7 +895,7 @@ pub struct SetUsedPersistentLaunchersForEvaluateResult {}
 pub enum SetUsedPersistentLaunchersForEvaluateError {
     PersistentLauncherNotFound,
     ModelNotFound,
-    SnapshotNoLongerExists,
+    ModelVersionNotFound,
     AccessDenied,
     BadCredentials,
     TooManyRequests,
@@ -1294,7 +908,7 @@ pub enum SetUsedPersistentLaunchersForEvaluateError {
     },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum UsedPersistentLauncherLevel {
     Launcher,
@@ -1319,6 +933,7 @@ pub struct GetUsedPersistentLaunchersForEvaluateResult {
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum GetUsedPersistentLaunchersForEvaluateError {
     ModelNotFound,
+    ModelVersionNotFound,
     BadCredentials,
     TooManyRequests,
     PaymentRequired,

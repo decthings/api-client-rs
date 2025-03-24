@@ -55,7 +55,7 @@ pub struct LookupResult {
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum LookupError {
     ModelNotFound,
-    SnapshotNotFound,
+    ModelVersionNotFound,
     #[serde(rename = "ESTALE")]
     ESTALE,
     #[serde(rename = "ENOENT")]
@@ -83,7 +83,7 @@ pub struct GetattrResult {
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum GetattrError {
     ModelNotFound,
-    SnapshotNotFound,
+    ModelVersionNotFound,
     #[serde(rename = "ESTALE")]
     ESTALE,
     BadCredentials,
@@ -167,7 +167,7 @@ pub struct ReadResult {
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum ReadError {
     ModelNotFound,
-    SnapshotNotFound,
+    ModelVersionNotFound,
     #[serde(rename = "ESTALE")]
     ESTALE,
     #[serde(rename = "EISDIR")]
@@ -257,7 +257,7 @@ pub struct ReadlinkResult {
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum ReadlinkError {
     ModelNotFound,
-    SnapshotNotFound,
+    ModelVersionNotFound,
     #[serde(rename = "ESTALE")]
     ESTALE,
     #[serde(rename = "EINVAL")]
@@ -448,7 +448,7 @@ pub struct ReaddirResult {
 #[serde(rename_all = "snake_case", tag = "code")]
 pub enum ReaddirError {
     ModelNotFound,
-    SnapshotNotFound,
+    ModelVersionNotFound,
     #[serde(rename = "ESTALE")]
     ESTALE,
     #[serde(rename = "ENOTDIR")]

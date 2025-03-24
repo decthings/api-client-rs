@@ -1,5 +1,5 @@
 use crate::{
-    client::rpc::{ExecutionLocation, ParameterDefinitions, StateKeyData},
+    client::rpc::{ExecutionLocation, ParameterDefinitions, WeightKeyData},
     client::DecthingsParameter,
     tensor::OwnedDecthingsTensor,
 };
@@ -153,21 +153,21 @@ pub enum TerminateDebugSessionError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StateKey {
+pub struct WeightKey {
     pub key: String,
     pub byte_size: u64,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CallCreateModelStateResult {
+pub struct CallInitializeWeightsResult {
     pub data_id: String,
-    pub state: Vec<StateKey>,
+    pub weights: Vec<WeightKey>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
-pub enum CallCreateModelStateError {
+pub enum CallInitializeWeightsError {
     DebugSessionNotFound,
     DebugSessionTerminated,
     #[serde(rename_all = "camelCase")]
@@ -206,7 +206,7 @@ pub struct CallInstantiateModelResult {
 pub enum CallInstantiateModelError {
     DebugSessionNotFound,
     DebugSessionTerminated,
-    StateDataNotFound,
+    WeightDataNotFound,
     #[serde(rename_all = "camelCase")]
     Exception {
         exception_details: Option<String>,
@@ -418,14 +418,14 @@ pub enum CallEvaluateError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CallGetModelStateResult {
+pub struct CallGetWeightsResult {
     pub data_id: String,
-    pub state: Vec<StateKey>,
+    pub weights: Vec<WeightKey>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
-pub enum CallGetModelStateError {
+pub enum CallGetWeightsError {
     DebugSessionNotFound,
     InstantiatedModelNotFound,
     DebugSessionTerminated,
@@ -446,17 +446,17 @@ pub enum CallGetModelStateError {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DownloadStateDataResult {
-    #[serde(rename = "stateKeyNames")]
-    pub data: Vec<StateKeyData>,
+pub struct DownloadWeightDataResult {
+    #[serde(skip_deserializing)]
+    pub data: Vec<WeightKeyData>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "code")]
-pub enum DownloadStateDataError {
+pub enum DownloadWeightDataError {
     DebugSessionNotFound,
-    StateDataNotFound,
-    StateKeyNotFound,
+    WeightDataNotFound,
+    WeightKeyNotFound,
     BadCredentials,
     TooManyRequests,
     PaymentRequired,
