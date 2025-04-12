@@ -404,7 +404,7 @@ pub enum UpdateModelVersionError {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GetWeightsResult {
-    #[serde(skip_deserializing)]
+    #[serde(rename = "weightKeyNames")]
     pub data: Vec<WeightKeyData>,
 }
 

@@ -447,7 +447,7 @@ pub enum CallGetWeightsError {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DownloadWeightDataResult {
-    #[serde(skip_deserializing)]
+    #[serde(rename = "weightKeyNames")]
     pub data: Vec<WeightKeyData>,
 }
 
